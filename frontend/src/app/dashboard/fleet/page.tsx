@@ -25,8 +25,8 @@ export default function FleetPage() {
               <h3 className="font-semibold">{t.vehicle_number}</h3>
               <span className={`badge ${t.status === "on_route" ? "badge-worker" : t.status === "completed" ? "fill-green" : "badge-driver"}`}>{t.status.replace("_", " ")}</span>
             </div>
-            <p className="text-sm text-[#8A8887]">Driver: {t.driver_name || "Unassigned"}</p>
-            <p className="text-sm text-[#8A8887]">Capacity: {t.capacity_kg}kg</p>
+            <p className="text-sm text-[#6B7280]">Driver: {t.driver_name || "Unassigned"}</p>
+            <p className="text-sm text-[#6B7280]">Capacity: {t.capacity_kg}kg</p>
           </div>
         ))}
       </div>

@@ -76,8 +76,8 @@ export default function DashboardPage() {
               <span className={`text-xl font-bold ${card.color}`}>{typeof card.value === "number" ? card.value : ""}</span>
             </div>
             <div className={`text-2xl font-bold ${card.color}`}>{card.value}</div>
-            <div className="text-sm text-[#8A8887]">{card.label}</div>
-            <div className="text-xs text-[#5F5E5A]">{card.sub}</div>
+            <div className="text-sm text-[#6B7280]">{card.label}</div>
+            <div className="text-xs text-[#9CA3AF]">{card.sub}</div>
           </div>
         ))}
       </div>
@@ -85,7 +85,7 @@ export default function DashboardPage() {
       {/* Map + Alerts */}
       <div className="grid grid-cols-5 gap-6">
         <div className="col-span-3 card" style={{ minHeight: 480 }}>
-          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">🗺️ Zone Map <span className="text-xs text-[#8A8887]">({zones.length} zones)</span></h3>
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">🗺️ Zone Map <span className="text-xs text-[#6B7280]">({zones.length} zones)</span></h3>
           <ZoneMap zones={zones} trucks={trucks} />
         </div>
 

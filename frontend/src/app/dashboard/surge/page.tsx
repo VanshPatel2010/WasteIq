@@ -51,7 +51,7 @@ export default function SurgePage() {
             </tr>
           ))}</tbody>
         </table>
-        {alerts.length === 0 && <p className="text-[#5F5E5A] text-center py-8">No active surge alerts — all zones within normal levels</p>}
+        {alerts.length === 0 && <p className="text-[#9CA3AF] text-center py-8">No active surge alerts — all zones within normal levels</p>}
       </div>
     </div>
   );
