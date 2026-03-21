@@ -41,6 +41,40 @@ def train_model():
     print(f"Mean Absolute Error (kg): {mae:.2f}")
     print(f"R-squared Score: {r2:.4f}")
     
+    print("\nGenerating Binned Confusion Matrix and Classification Metrics...")
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    from sklearn.metrics import confusion_matrix, classification_report
+    
+    # Bin continuous values into categories for confusion matrix
+    labels = ["Low Surge", "Normal", "High Surge", "Severe Surge"]
+    # Bins: 0-25th, 25-50th, 50-75th, 75-100th percentiles
+    y_test_binned = pd.qcut(y_test, q=4, labels=labels)
+    
+    # Since y_pred might fall outside exact test quantiles, use absolute cutoffs from y_test quantiles
+    cutoffs = [-np.inf] + list(np.percentile(y_test, [25, 50, 75])) + [np.inf]
+    y_pred_binned = pd.cut(y_pred, bins=cutoffs, labels=labels)
+    
+    print("\n--- Model Classification Metrics (Binned) ---")
+    print(classification_report(y_test_binned, y_pred_binned, labels=labels))
+    print("---------------------------------------------")
+    
+    cm = confusion_matrix(y_test_binned, y_pred_binned, labels=labels)
+    
+    # Plot the matrix
+    plt.figure(figsize=(10, 8))
+    sns.set_theme(style="white", font_scale=1.2)
+    sns.heatmap(cm, annot=True, fmt='g', cmap='Blues', xticklabels=labels, yticklabels=labels, cbar=False)
+    plt.xlabel('Predicted Surge Level (XGBoost)', labelpad=15, fontweight='bold')
+    plt.ylabel('Actual Surge Level (Simulated)', labelpad=15, fontweight='bold')
+    plt.title('Waste Prediction Confusion Matrix (Binned Regressor)', pad=20, fontweight='bold')
+    
+    image_path = os.path.join(os.path.dirname(__file__), "confusion_matrix.png")
+    plt.savefig(image_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"Confusion matrix saved to {image_path}")
+    
     # Save the model
     model_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models")
     os.makedirs(model_dir, exist_ok=True)
