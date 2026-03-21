@@ -16,10 +16,29 @@ export default function GeneratorPage() {
   useEffect(() => { if (user) { api.getListings().then(setListings); api.getMatches().then(setMatches); } }, [user]);
 
   const handleSubmit = async () => {
-    await api.createListing({ ...form, quantity_kg: parseFloat(form.quantity_kg), expires_at: new Date(form.expires_at).toISOString() });
-    setShowForm(false);
-    api.getListings().then(setListings);
-    api.getMatches().then(setMatches);
+    try {
+      if (!form.quantity_kg || isNaN(parseFloat(form.quantity_kg))) {
+        alert("Please enter a valid quantity in kg.");
+        return;
+      }
+      
+      // Default to 24 hours from now if no expiry date is selected by the user
+      const expiry = form.expires_at ? new Date(form.expires_at) : new Date(Date.now() + 24 * 60 * 60 * 1000);
+      
+      await api.createListing({ 
+        ...form, 
+        quantity_kg: parseFloat(form.quantity_kg), 
+        expires_at: expiry.toISOString() 
+      });
+      
+      setShowForm(false);
+      setForm({ material_type: "food", quantity_kg: "", description: "", expires_at: "" });
+      
+      api.getListings().then(setListings);
+      api.getMatches().then(setMatches);
+    } catch (e: any) {
+      alert("Error creating listing: " + e.message);
+    }
   };
 
   if (loading || !user) return null;

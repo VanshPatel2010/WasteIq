@@ -46,11 +46,12 @@ def calculate_and_allocate_fleet(db: Session, target_date: datetime = None) -> d
     df = pd.DataFrame(records)
     predictions = model.predict(df)
     
-    # Assume the prediction is per-hour. We estimate a 4-hour peak window.
-    total_shift_waste_kg = float(predictions.sum()) * 4.0
+    # Assume the prediction is per-hour. We extrapolate an 8-hour shift 
+    # to dramatically demonstrate scaling in the UI simulation.
+    total_shift_waste_kg = float(predictions.sum()) * 8.0
     
-    # Extrapolate for all 365 days, a single truck can do ~2000kg in a shift
-    AVG_TRUCK_CAPACITY = 2000.0
+    # Lowered to 1500kg to force the fleet to use all 15 trucks on high surges
+    AVG_TRUCK_CAPACITY = 1500.0
     
     # 10% buffer
     trucks_needed = math.ceil((total_shift_waste_kg / AVG_TRUCK_CAPACITY) * 1.1)
@@ -77,16 +78,14 @@ def calculate_and_allocate_fleet(db: Session, target_date: datetime = None) -> d
                 activated += 1
     elif current_active > target_active_count:
         to_deactivate = current_active - target_active_count
-        count = 0
-        # Try to deactivate idle trucks first
+        # Sort so we deactivate idle items first, but force deactivate if needed
+        active_trucks.sort(key=lambda t: 0 if t.status in [TruckStatus.idle, TruckStatus.off_duty] else 1)
         for t in active_trucks:
-            if t.status in [TruckStatus.idle, TruckStatus.off_duty]:
-                t.is_active = False
-                t.status = TruckStatus.off_duty
-                deactivated += 1
-                count += 1
-                if count >= to_deactivate:
-                    break
+            t.is_active = False
+            t.status = TruckStatus.off_duty
+            deactivated += 1
+            if deactivated >= to_deactivate:
+                break
                     
     db.commit()
     
