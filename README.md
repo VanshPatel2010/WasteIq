@@ -32,8 +32,8 @@ The easiest way to run the entire stack (Database, Redis, Backend, and Frontend)
 
 3. **Access the application:**
    - **Frontend UI:** `http://localhost:3000`
-   - **Backend API:** `http://localhost:8001`
-   - **API Documentation (Swagger):** `http://localhost:8001/docs`
+   - **Backend API:** `http://localhost:8000`
+   - **API Documentation (Swagger):** `http://localhost:8000/docs`
 
 ---
 
@@ -80,9 +80,9 @@ The backend is built with Python. We'll set it up inside an isolated **Virtual E
 
 5. **Start the backend development server:**
    ```bash
-   python -m uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+   python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
    ```
-   *The backend API will now be accessible at `http://localhost:8001`.*
+   *The backend API will now be accessible at `http://localhost:8000`.*
 
 6. **(Optional) Run Celery Worker for Background Tasks:**
    In a *new terminal*, activate the backend virtual environment again and run:

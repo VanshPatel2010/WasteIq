@@ -30,11 +30,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#1A1A22] border-r border-[#2A2A36] flex flex-col fixed h-full">
-        <div className="p-5 border-b border-[#2A2A36]">
+      <aside className="w-64 bg-white border-r border-[#D6D3C8] flex flex-col fixed h-full shadow-sm">
+        <div className="p-5 border-b border-[#D6D3C8]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#534AB7] flex items-center justify-center text-sm font-bold">W</div>
-            <span className="text-lg font-bold bg-gradient-to-r from-[#534AB7] to-[#7B73D1] bg-clip-text text-transparent">WasteIQ</span>
+            <div className="w-8 h-8 rounded-lg bg-[#1B7A4A] text-white flex items-center justify-center text-sm font-bold">W</div>
+            <span className="text-lg font-bold bg-gradient-to-r from-[#1B7A4A] to-[#24A65A] bg-clip-text text-transparent">WasteIQ</span>
           </div>
         </div>
 
@@ -47,15 +47,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-[#2A2A36]">
+        <div className="p-4 border-t border-[#D6D3C8]">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 rounded-full bg-[#534AB7]/20 flex items-center justify-center text-sm">🏛️</div>
+            <div className="w-8 h-8 rounded-full bg-[#1B7A4A]/10 text-[#1B7A4A] flex items-center justify-center text-sm uppercase font-bold">{user.name[0]}</div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user.name}</p>
-              <p className="text-xs text-[#8A8887]">Municipal Admin</p>
+              <p className="text-sm font-medium truncate text-[#1F2937]">{user.name}</p>
+              <p className="text-xs text-[#6B7280]">Municipal Admin</p>
             </div>
           </div>
-          <button onClick={logout} className="w-full text-sm text-[#8A8887] hover:text-[#E04848] transition-colors py-2 rounded-lg hover:bg-[#A32D2D]/10">Sign Out</button>
+          <button onClick={logout} className="w-full text-sm text-[#6B7280] hover:text-[#B91C1C] transition-colors py-2 rounded-lg hover:bg-[#B91C1C]/10 font-medium">Sign Out</button>
         </div>
       </aside>
 

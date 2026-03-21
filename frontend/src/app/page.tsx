@@ -22,12 +22,12 @@ export default function Home() {
   }, [user, loading, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F5F0]">
       <div className="animate-pulse flex flex-col items-center gap-4">
-        <div className="w-12 h-12 rounded-full bg-[#534AB7]/30 flex items-center justify-center">
-          <div className="w-6 h-6 rounded-full bg-[#534AB7] animate-ping" />
+        <div className="w-12 h-12 rounded-full bg-[#1B7A4A]/30 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-full bg-[#1B7A4A] animate-ping" />
         </div>
-        <p className="text-[#8A8887]">Loading WasteIQ...</p>
+        <p className="text-[#6B7280]">Loading WasteIQ...</p>
       </div>
     </div>
   );
