@@ -54,6 +54,8 @@ class ApiClient {
   getReports(params?: any) { const q = params ? "?" + new URLSearchParams(params).toString() : ""; return this.get(`/api/waste-worker/reports${q}`); }
   getMyZones() { return this.get("/api/waste-worker/my-zones"); }
   getWorkers() { return this.get("/api/workers"); }
+  getMyRewards() { return this.get("/api/waste-worker/my-rewards"); }
+  getLeaderboard() { return this.get("/api/waste-worker/leaderboard"); }
 
   // Trucks & Routes
   getTrucks() { return this.get("/api/trucks/"); }

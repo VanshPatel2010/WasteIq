@@ -38,6 +38,7 @@ class UserResponse(BaseModel):
     phone: str | None
     organisation_id: int | None
     is_active: bool
+    reward_points: int = 0
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -56,6 +57,7 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
             "role": user.role.value,
             "phone": user.phone,
             "organisation_id": user.organisation_id,
+            "reward_points": user.reward_points or 0,
         },
     )
 
@@ -88,6 +90,7 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
             "role": user.role.value,
             "phone": user.phone,
             "organisation_id": user.organisation_id,
+            "reward_points": user.reward_points or 0,
         },
     )
 
@@ -102,4 +105,5 @@ def get_me(current_user: User = Depends(get_current_user)):
         phone=current_user.phone,
         organisation_id=current_user.organisation_id,
         is_active=current_user.is_active,
+        reward_points=current_user.reward_points or 0,
     )

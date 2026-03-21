@@ -14,10 +14,12 @@ from app.models.surplus_listing import SurplusListing
 from app.models.surplus_match import SurplusMatch
 from app.models.kabadiwala_log import KabadiwalaLog
 from app.models.sustainability_score import SustainabilityScore
+from app.models.reward import Reward
 
 __all__ = [
     "User", "Organisation", "Zone", "WasteWorkerReport",
     "ZoneFillLevelLog", "PredictionAccuracyLog", "ModelDriftAlert",
     "Truck", "Route", "Pickup", "SurgePrediction",
     "SurplusListing", "SurplusMatch", "KabadiwalaLog", "SustainabilityScore",
+    "Reward",
 ]

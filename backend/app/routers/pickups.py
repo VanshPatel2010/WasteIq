@@ -102,7 +102,7 @@ def complete_pickup(
             if all_done:
                 route.status = RouteStatus.completed
                 route.completed_at = datetime.utcnow()
-    # --- Worker accuracy comparison & penalty ---
+    # --- Worker accuracy comparison, penalty & rewards ---
     worker_comparison = None
     four_hours_ago = datetime.utcnow() - timedelta(hours=4)
     recent_worker = (
@@ -123,14 +123,40 @@ def complete_pickup(
             "difference": round(diff, 1),
             "accurate": is_accurate,
             "worker_name": None,
+            "reward_awarded": None,
         }
-        # Penalize the worker if inaccurate
+        # Penalize the worker if inaccurate, reward if accurate
         worker_user = db.query(User).filter(User.id == recent_worker.worker_id).first()
         if worker_user:
             worker_comparison["worker_name"] = worker_user.name
             if not is_accurate:
                 worker_user.penalty_count = (worker_user.penalty_count or 0) + 1
                 worker_user.accuracy_score = max(0, (worker_user.accuracy_score or 100) - 5)
+            else:
+                # Award reward points
+                from app.models.reward import Reward
+                points = 10  # Base reward for accurate report
+                reason = "Accurate report verified by driver"
+                if diff <= 5:
+                    points += 5  # Bonus for high accuracy
+                    reason = "Highly accurate report verified by driver"
+                worker_user.reward_points = (worker_user.reward_points or 0) + points
+                reward = Reward(
+                    worker_id=worker_user.id,
+                    report_id=recent_worker.id,
+                    pickup_id=pickup.id,
+                    points=points,
+                    reason=reason,
+                    fill_level_reported=recent_worker.reported_fill_level,
+                    fill_level_found=req.fill_level_found,
+                    difference=round(diff, 1),
+                )
+                db.add(reward)
+                worker_comparison["reward_awarded"] = {
+                    "points": points,
+                    "reason": reason,
+                    "total_points": (worker_user.reward_points or 0),
+                }
 
     db.commit()
 
