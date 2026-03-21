@@ -19,6 +19,8 @@ export default function DriverPage() {
   const [weight, setWeight] = useState("");
   const [toast, setToast] = useState("");
   const [comparison, setComparison] = useState<any>(null);
+  const [simStatus, setSimStatus] = useState<any>(null);
+  const [simDate, setSimDate] = useState<string>("");
 
   useEffect(() => { if (!loading && user?.role !== "driver") router.push("/"); }, [user, loading, router]);
   useEffect(() => {
@@ -29,11 +31,33 @@ export default function DriverPage() {
       api.getZones().then(setZones);
       api.getTrucks().then(setTrucks);
       api.getPickups().then(setPickups);
+      api.getSimulationStatus().then((sim) => {
+        setSimStatus(sim);
+        if (!simDate && sim.current_time) setSimDate(sim.current_time.substring(0, 16));
+      });
     };
     fetchData();
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, simDate]);
+
+  const setSimulation = async (dateStr: string | null) => {
+    try {
+      if (dateStr) {
+        await api.setSimulationDate(new Date(dateStr).toISOString());
+      } else {
+        await api.setSimulationDate(null);
+        setSimDate("");
+      }
+      // Force refresh data
+      const sim = await api.getSimulationStatus();
+      setSimStatus(sim);
+      api.getRoutes({}).then(setRoutes);
+      api.getRoutes({ all: true }).then(setAllRoutes);
+    } catch (err: any) {
+      alert("Simulation failed: " + err.message);
+    }
+  };
 
   const handleComplete = async () => {
     if (!completing) return;
@@ -123,11 +147,35 @@ export default function DriverPage() {
 
   // --- Main driver view ---
   return (
-    <div className="min-h-screen bg-[#F5F5F0] pwa-container text-[#1F2937]">
-      <div className="bg-white border-b border-[#D6D3C8] p-4 shadow-sm sticky top-0 z-10">
+    <div className="min-h-screen bg-[#0F0F12] pwa-container">
+      <div className="bg-[#1A1A22] border-b border-[#2A2A36] p-4">
         <div className="flex items-center justify-between">
-          <div><h1 className="text-lg font-bold text-[#1F2937]">{user.name}</h1><p className="text-sm text-[#6B7280]">Driver</p></div>
-          <div className="flex items-center gap-3"><div className="badge badge-worker shadow-sm border border-[#1B7A4A]/20">● Online</div><button onClick={logout} className="text-xs text-[#6B7280] font-medium hover:text-[#B91C1C] transition-colors">Logout</button></div>
+          <div><h1 className="text-lg font-bold">{user.name}</h1><p className="text-sm text-[#8A8887]">Driver</p></div>
+          <div className="flex gap-2"><div className="badge badge-worker">● Online</div><button onClick={logout} className="text-xs text-[#8A8887]">Logout</button></div>
+        </div>
+      </div>
+      
+      {/* TIME MACHINE UI */}
+      <div className="p-4 border-b border-[#2A2A36] bg-[#1A1A22]">
+        <h2 className="text-sm font-semibold text-[#8A8887] mb-2 uppercase">⏳ {simStatus?.is_simulated ? "Time Machine (Active)" : "Live Mode"}</h2>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <input 
+              type="datetime-local" 
+              className="bg-[#1C1C24] flex-1 text-sm border border-[#2A2A36] rounded px-2 py-2"
+              value={simDate}
+              onChange={(e) => setSimDate(e.target.value)}
+            />
+            <button className="btn-primary py-2 px-4 text-sm whitespace-nowrap" onClick={() => setSimulation(simDate)}>Simulate</button>
+            {simStatus?.is_simulated && (
+              <button className="bg-[#2A2A36] hover:bg-[#343442] text-white py-2 px-3 rounded text-sm transition" onClick={() => setSimulation(null)}>Reset</button>
+            )}
+          </div>
+          <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-hide">
+            <button className="whitespace-nowrap badge badge-worker cursor-pointer" onClick={() => { setSimDate("2023-10-18T21:00"); setSimulation("2023-10-18T21:00"); }}>🥁 Navratri Night</button>
+            <button className="whitespace-nowrap badge bg-[#A32D2D]/20 text-[#E04848] cursor-pointer" onClick={() => { setSimDate("2023-11-12T08:00"); setSimulation("2023-11-12T08:00"); }}>🪔 Diwali Morning</button>
+            <button className="whitespace-nowrap badge badge-driver cursor-pointer" onClick={() => { setSimDate("2024-01-14T14:00"); setSimulation("2024-01-14T14:00"); }}>🪁 Uttarayan</button>
+          </div>
         </div>
       </div>
 
@@ -136,7 +184,7 @@ export default function DriverPage() {
         <h2 className="text-sm font-semibold text-[#8A8887] mb-3">📍 ROUTE MAP</h2>
         <div className="card mb-4 p-0 overflow-hidden">
           <Suspense fallback={<div className="h-[250px] flex items-center justify-center text-[#5F5E5A]">Loading map...</div>}>
-            <ZoneMap ReactLeaflet="fix-tsx-parser" zones={zones} trucks={trucks} routes={allRoutes} />
+            <ZoneMap zones={zones} trucks={trucks} routes={allRoutes} />
           </Suspense>
         </div>
 
@@ -150,7 +198,15 @@ export default function DriverPage() {
                 <p className="font-bold text-[#1F2937]">{stop.zone_name || `Zone ${stop.zone_id}`}</p>
                 <p className="text-xs text-[#6B7280] font-medium">Fill: {Math.round(stop.fill_level || 0)}% {stop.distance_km ? `• ${stop.distance_km}km away` : ""}</p>
               </div>
-              {!stop.completed && <button onClick={() => setCompleting(stop)} className="btn-primary py-2 px-4 text-sm font-bold shadow-md">Complete</button>}
+              {!stop.completed && (
+                <button 
+                  onClick={() => setCompleting(stop)} 
+                  disabled={simStatus?.is_simulated && new Date(simDate) > new Date()}
+                  className={`btn-primary py-2 px-4 text-sm font-bold shadow-md ${(simStatus?.is_simulated && new Date(simDate) > new Date()) ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  {(simStatus?.is_simulated && new Date(simDate) > new Date()) ? "Future Task" : "Complete"}
+                </button>
+              )}
               {stop.completed && <span className="badge fill-green shadow-sm px-3 py-1 text-xs">Done ✓</span>}
             </div>
           </div>

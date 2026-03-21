@@ -15,6 +15,31 @@ export default function DashboardPage() {
   const [simStatus, setSimStatus] = useState<any>(null);
   const [simDate, setSimDate] = useState<string>("");
 
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({ name: "", email: "", password: "", phone: "", role: "driver" });
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
+  const [addSuccess, setAddSuccess] = useState("");
+
+  const handleAddPersonnel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addForm.name || !addForm.email || !addForm.password) return setAddError("Please fill required fields");
+    setAddLoading(true);
+    setAddError("");
+    setAddSuccess("");
+    try {
+      await api.register({ ...addForm, organisation_id: 1 });
+      setAddSuccess(`Successfully added ${addForm.name}!`);
+      setAddForm({ name: "", email: "", password: "", phone: "", role: "driver" });
+      setTimeout(() => setShowAddModal(false), 2000);
+      fetchAll();
+    } catch (err: any) {
+      setAddError(err.message || "Failed to add personnel");
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
   const fetchAll = () => {
     Promise.all([
       api.dashboardStats(), api.getZones(), api.getSurgeAlerts(), 
@@ -80,11 +105,12 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#1F2937]">Dashboard</h1>
           <p className="text-[#6B7280] text-sm">Municipal Intelligence Overview</p>
+          <button onClick={() => setShowAddModal(true)} className="btn-primary mt-2 text-xs py-1.5 px-3 shadow-sm font-bold bg-[#1B7A4A]">+ Add Personnel</button>
         </div>
         
         {/* TIME MACHINE UI */}
@@ -178,6 +204,35 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border border-[#D6D3C8]">
+            <h2 className="text-xl font-bold text-[#1F2937] mb-2">Register Personnel</h2>
+            <p className="text-sm text-[#6B7280] mb-6">Create new roles for the municipal fleet network.</p>
+            <form onSubmit={handleAddPersonnel} className="space-y-4">
+              <div className="flex gap-2 p-1 bg-[#F0EDE6] rounded-xl shadow-inner border border-[#D6D3C8]/50">
+                <button type="button" onClick={() => setAddForm({...addForm, role: "driver"})} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${addForm.role === "driver" ? "bg-white text-[#1B7A4A] shadow-sm transform scale-100" : "text-[#6B7280] hover:text-[#1F2937]"}`}>🚛 Driver</button>
+                <button type="button" onClick={() => setAddForm({...addForm, role: "waste_worker"})} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${addForm.role === "waste_worker" ? "bg-white text-[#1B7A4A] shadow-sm transform scale-100" : "text-[#6B7280] hover:text-[#1F2937]"}`}>👷 Waste Worker</button>
+              </div>
+              <input type="text" value={addForm.name} onChange={e => setAddForm({...addForm, name: e.target.value})} className="input w-full bg-[#F5F5F0] border-[#D6D3C8] text-[#1F2937]" placeholder="Full Name" required />
+              <input type="email" value={addForm.email} onChange={e => setAddForm({...addForm, email: e.target.value})} className="input w-full bg-[#F5F5F0] border-[#D6D3C8] text-[#1F2937]" placeholder="Email Address" required />
+              <input type="tel" value={addForm.phone} onChange={e => setAddForm({...addForm, phone: e.target.value})} className="input w-full bg-[#F5F5F0] border-[#D6D3C8] text-[#1F2937]" placeholder="Phone Number (Optional)" />
+              <input type="password" value={addForm.password} onChange={e => setAddForm({...addForm, password: e.target.value})} className="input w-full bg-[#F5F5F0] border-[#D6D3C8] text-[#1F2937]" placeholder="Temporary Password" required />
+              
+              {addError && <p className="text-xs text-[#B91C1C] font-bold bg-[#FEF2F2] p-2 rounded-lg text-center">{addError}</p>}
+              {addSuccess && <p className="text-xs text-[#15803D] font-bold bg-[#F0FDF4] p-2 rounded-lg text-center">{addSuccess}</p>}
+              
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowAddModal(false)} className="bg-white border text-sm font-bold border-[#D6D3C8] hover:bg-[#F0EDE6] flex-1 py-2.5 rounded-xl shadow-sm transition-colors text-[#1F2937]">Cancel</button>
+                <button type="submit" disabled={addLoading} className="btn-primary flex-1 py-2.5 text-sm font-bold shadow-md">
+                  {addLoading ? "Creating..." : `Add ${addForm.role === "driver" ? "Driver" : "Worker"}`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

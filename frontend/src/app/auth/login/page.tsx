@@ -75,6 +75,11 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
+          
+          <div className="mt-6 text-center text-sm border-t border-[#D6D3C8]/50 pt-5">
+            <span className="text-[#6B7280] font-medium">Want to join the Surplus Network? </span>
+            <a href="/auth/register" className="font-bold text-[#1B7A4A] hover:text-[#24A65A] transition-colors ml-1">Sign up here</a>
+          </div>
         </div>
 
         <div className="mt-6">
