@@ -1,0 +1,16 @@
+{
+  "name": "WasteIQ",
+  "short_name": "WasteIQ",
+  "description": "From reactive to predictive — ground truth first.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F0F12",
+  "theme_color": "#534AB7",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

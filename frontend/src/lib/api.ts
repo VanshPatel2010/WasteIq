@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 class ApiClient {
   private token: string | null = null;
@@ -51,6 +51,7 @@ class ApiClient {
   submitReport(data: any) { return this.post("/api/waste-worker/reports", data); }
   getReports(params?: any) { const q = params ? "?" + new URLSearchParams(params).toString() : ""; return this.get(`/api/waste-worker/reports${q}`); }
   getMyZones() { return this.get("/api/waste-worker/my-zones"); }
+  getWorkers() { return this.get("/api/workers"); }
 
   // Trucks & Routes
   getTrucks() { return this.get("/api/trucks/"); }

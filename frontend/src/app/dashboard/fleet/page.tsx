@@ -5,7 +5,15 @@ import { api } from "@/lib/api";
 export default function FleetPage() {
   const [trucks, setTrucks] = useState<any[]>([]);
   const [routes, setRoutes] = useState<any[]>([]);
-  useEffect(() => { api.getTrucks().then(setTrucks); api.getRoutes({}).then(setRoutes); }, []);
+  useEffect(() => {
+    const fetchData = () => {
+      api.getTrucks().then(setTrucks);
+      api.getRoutes({}).then(setRoutes);
+    };
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="space-y-6">

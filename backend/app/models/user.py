@@ -1,7 +1,7 @@
 """User model with 6 roles."""
 import enum
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Enum, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Enum, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -27,6 +27,8 @@ class User(Base):
     organisation_id = Column(Integer, ForeignKey("organisations.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     is_active = Column(Boolean, default=True)
+    penalty_count = Column(Integer, default=0)
+    accuracy_score = Column(Float, default=100.0)
 
     organisation = relationship("Organisation", back_populates="users")
     waste_worker_reports = relationship("WasteWorkerReport", back_populates="worker")

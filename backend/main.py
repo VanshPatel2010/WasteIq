@@ -9,6 +9,12 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="WasteIQ API", description="Predictive Waste Intelligence Platform", version="1.0.0")
 
+
+@app.on_event("startup")
+def startup_event():
+    from app.services.realtime_scheduler import start_scheduler
+    start_scheduler()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://localhost:3001", "*"],
@@ -72,5 +78,32 @@ def dashboard_stats():
             "surge_alerts": surge_alerts, "surplus_matches_today": surplus_today,
             "worker_reports_today": worker_reports_today, "zones_covered_today": zones_covered,
         }
+    finally:
+        db.close()
+
+
+@app.get("/api/workers")
+def get_workers():
+    """Get all waste workers with penalty and accuracy data."""
+    from database import SessionLocal
+    from app.models.user import User, UserRole
+    from app.models.zone import Zone
+    db = SessionLocal()
+    try:
+        workers = db.query(User).filter(User.role == UserRole.waste_worker).all()
+        result = []
+        for w in workers:
+            zones = db.query(Zone).filter(Zone.assigned_waste_worker_id == w.id).all()
+            result.append({
+                "id": w.id,
+                "name": w.name,
+                "email": w.email,
+                "phone": w.phone,
+                "zones": [z.name for z in zones],
+                "penalty_count": w.penalty_count or 0,
+                "accuracy_score": round(w.accuracy_score or 100, 1),
+                "is_active": w.is_active,
+            })
+        return result
     finally:
         db.close()

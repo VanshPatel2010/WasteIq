@@ -10,11 +10,34 @@ export default function DashboardPage() {
   const [zones, setZones] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [trucks, setTrucks] = useState<any[]>([]);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+
+  const handleReroute = async () => {
+    try {
+      setIsOptimizing(true);
+      await api.optimizeRoutes();
+      alert("Routes optimized successfully! Truck paths have been updated.");
+      
+      // Refresh UI data
+      Promise.all([api.dashboardStats(), api.getZones(), api.getSurgeAlerts(), api.getTrucks()])
+        .then(([s, z, a, t]) => { setStats(s); setZones(z); setAlerts(a); setTrucks(t); })
+        .catch(console.error);
+    } catch (err: any) {
+      alert("Failed to optimize routes: " + err.message);
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
 
   useEffect(() => {
-    Promise.all([api.dashboardStats(), api.getZones(), api.getSurgeAlerts(), api.getTrucks()])
-      .then(([s, z, a, t]) => { setStats(s); setZones(z); setAlerts(a); setTrucks(t); })
-      .catch(console.error);
+    const fetchAll = () => {
+      Promise.all([api.dashboardStats(), api.getZones(), api.getSurgeAlerts(), api.getTrucks()])
+        .then(([s, z, a, t]) => { setStats(s); setZones(z); setAlerts(a); setTrucks(t); })
+        .catch(console.error);
+    };
+    fetchAll();
+    const interval = setInterval(fetchAll, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const metricCards = stats ? [
@@ -81,7 +104,9 @@ export default function DashboardPage() {
                     {getSourceBadge(a.fill_level_source)}
                   </div>
                 </div>
-                <button className="text-xs btn-primary py-1.5 px-3">Reroute</button>
+                <button className="text-xs btn-primary py-1.5 px-3" onClick={handleReroute} disabled={isOptimizing}>
+                  {isOptimizing ? "Routing..." : "Reroute"}
+                </button>
               </div>
             ))}
           </div>

@@ -4,11 +4,25 @@ import { api } from "@/lib/api";
 export default function ReportsPage() {
   const [zones, setZones] = useState<any[]>([]);
   useEffect(() => { api.getZones().then(setZones); }, []);
+
+  const handleExport = () => {
+    if (!zones.length) return;
+    const header = "Zone ID,Name,Fill Level,Source\n";
+    const rows = zones.map(z => `${z.id},"${z.name}",${Math.round(z.current_fill_level)},${z.fill_level_source || "unknown"}`).join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "wasteiq_reports.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">📈 Reports</h1>
-        <button className="btn-primary text-sm">Export CSV</button>
+        <button className="btn-primary text-sm" onClick={handleExport}>Export CSV</button>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="card"><h3 className="text-sm font-semibold mb-3">Zone Fill Level Summary</h3>

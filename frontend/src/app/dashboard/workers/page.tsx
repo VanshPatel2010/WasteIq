@@ -8,38 +8,60 @@ export default function WorkersPage() {
 
   useEffect(() => {
     api.getReports({}).then(setReports).catch(console.error);
-    // Get zones to find workers
-    api.getZones().then((zones: any[]) => {
-      const workerMap = new Map<number, any>();
-      zones.forEach(z => {
-        if (z.assigned_waste_worker_id) {
-          if (!workerMap.has(z.assigned_waste_worker_id)) {
-            workerMap.set(z.assigned_waste_worker_id, { id: z.assigned_waste_worker_id, zones: [], reportsToday: 0, reportsWeek: 0 });
-          }
-          workerMap.get(z.assigned_waste_worker_id).zones.push(z.name);
-        }
-      });
-      setWorkers(Array.from(workerMap.values()));
-    }).catch(console.error);
+    api.getWorkers().then(setWorkers).catch(console.error);
   }, []);
+
+  const getAccuracyColor = (score: number) => {
+    if (score >= 80) return "#14A37F";
+    if (score >= 50) return "#D4A017";
+    return "#E04848";
+  };
 
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold">👷 Waste Worker Management</h1><p className="text-[#8A8887] text-sm">Manage field workers and zone assignments</p></div>
+      <div><h1 className="text-2xl font-bold">👷 Waste Worker Management</h1><p className="text-[#8A8887] text-sm">Manage field workers, zone assignments, and report accuracy</p></div>
 
       <div className="card">
         <table className="w-full text-sm">
           <thead><tr className="border-b border-[#2A2A36] text-[#8A8887]">
-            <th className="text-left py-3 px-2">Worker</th><th className="text-left py-3 px-2">Assigned Zones</th>
-            <th className="text-center py-3 px-2">Reports Today</th><th className="text-center py-3 px-2">Status</th>
+            <th className="text-left py-3 px-2">Worker</th>
+            <th className="text-left py-3 px-2">Assigned Zones</th>
+            <th className="text-center py-3 px-2">Reports Today</th>
+            <th className="text-center py-3 px-2">Accuracy</th>
+            <th className="text-center py-3 px-2">Penalties</th>
+            <th className="text-center py-3 px-2">Status</th>
           </tr></thead>
           <tbody>
             {workers.map(w => (
               <tr key={w.id} className="border-b border-[#2A2A36] hover:bg-[#22222E]">
-                <td className="py-3 px-2 font-medium">Worker #{w.id}</td>
+                <td className="py-3 px-2">
+                  <p className="font-medium">{w.name}</p>
+                  <p className="text-xs text-[#5F5E5A]">{w.email}</p>
+                </td>
                 <td className="py-3 px-2">{w.zones.map((z: string) => <span key={z} className="badge badge-worker mr-1 mb-1">{z}</span>)}</td>
-                <td className="text-center py-3 px-2">{reports.filter(r => r.worker_id === w.id).length}</td>
-                <td className="text-center py-3 px-2"><span className="badge fill-green">Active</span></td>
+                <td className="text-center py-3 px-2">{reports.filter(r => r.worker_name === w.name).length}</td>
+                <td className="text-center py-3 px-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-16 h-2 bg-[#2A2A36] rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${w.accuracy_score}%`, background: getAccuracyColor(w.accuracy_score) }} />
+                    </div>
+                    <span className="text-xs font-medium" style={{ color: getAccuracyColor(w.accuracy_score) }}>{w.accuracy_score}%</span>
+                  </div>
+                </td>
+                <td className="text-center py-3 px-2">
+                  {w.penalty_count > 0 ? (
+                    <span className="badge" style={{ background: "rgba(224,72,72,0.15)", color: "#E04848" }}>
+                      ⚠️ {w.penalty_count}
+                    </span>
+                  ) : (
+                    <span className="badge fill-green">None</span>
+                  )}
+                </td>
+                <td className="text-center py-3 px-2">
+                  <span className={`badge ${w.is_active ? "fill-green" : "fill-red"}`}>
+                    {w.is_active ? "Active" : "Inactive"}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>

@@ -113,21 +113,36 @@ export default function ModelHealthPage() {
           </table>
         </div>
 
-        {/* Expanded zone history */}
-        {selectedZone && history.length > 0 && (
-          <div className="mt-6 p-4 bg-[#22222E] rounded-lg">
-            <h4 className="text-sm font-semibold mb-3">30-Day Error Trend</h4>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={history}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2A2A36" />
-                <XAxis dataKey="evaluated_at" tickFormatter={(v) => new Date(v).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })} tick={{ fill: "#8A8887", fontSize: 11 }} />
-                <YAxis tick={{ fill: "#8A8887", fontSize: 11 }} />
-                <Tooltip contentStyle={{ background: "#1A1A22", border: "1px solid #2A2A36", borderRadius: 8 }} />
-                <Line type="monotone" dataKey="predicted_fill_level" stroke="#534AB7" strokeWidth={2} name="Predicted" dot={false} />
-                <Line type="monotone" dataKey="actual_fill_level" stroke="#14A37F" strokeWidth={2} name="Actual" dot={false} />
-                <Line type="monotone" dataKey="error_magnitude" stroke="#C05621" strokeWidth={1.5} strokeDasharray="5 5" name="Error" dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
+        {/* Details Modal */}
+        {selectedZone && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div className="bg-[#1A1A22] border border-[#2A2A36] rounded-xl w-full max-w-4xl p-6 shadow-2xl relative">
+              <button 
+                className="absolute top-4 right-4 text-[#8A8887] hover:text-white"
+                onClick={(e) => { e.stopPropagation(); setSelectedZone(null); }}
+              >
+                ✕ Close
+              </button>
+              <h4 className="text-lg font-bold mb-6">Zone Details & Accuracy Trend</h4>
+              
+              {history.length > 0 ? (
+                <div className="h-80 w-full mt-6">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={history}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2A2A36" />
+                      <XAxis dataKey="evaluated_at" tickFormatter={(v) => new Date(v).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })} tick={{ fill: "#8A8887", fontSize: 11 }} />
+                      <YAxis tick={{ fill: "#8A8887", fontSize: 11 }} />
+                      <Tooltip contentStyle={{ background: "#1A1A22", border: "1px solid #2A2A36", borderRadius: 8 }} />
+                      <Line type="monotone" dataKey="predicted_fill_level" stroke="#534AB7" strokeWidth={2} name="Predicted" dot={false} />
+                      <Line type="monotone" dataKey="actual_fill_level" stroke="#14A37F" strokeWidth={2} name="Actual" dot={false} />
+                      <Line type="monotone" dataKey="error_magnitude" stroke="#C05621" strokeWidth={1.5} strokeDasharray="5 5" name="Error" dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="text-center text-[#8A8887] py-10">No history available for this zone.</div>
+              )}
+            </div>
           </div>
         )}
       </div>

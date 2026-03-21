@@ -4,7 +4,29 @@ import { api } from "@/lib/api";
 
 export default function SurgePage() {
   const [alerts, setAlerts] = useState<any[]>([]);
-  useEffect(() => { api.getSurgeAlerts().then(setAlerts); }, []);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+
+  const handleReroute = async () => {
+    try {
+      setIsOptimizing(true);
+      await api.optimizeRoutes();
+      alert("Routes optimized! Trucks have been dispatched to handle surge zones.");
+      
+      // Refresh UI data
+      api.getSurgeAlerts().then(setAlerts).catch(console.error);
+    } catch (err: any) {
+      alert("Failed to optimize routes: " + err.message);
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchAlerts = () => api.getSurgeAlerts().then(setAlerts).catch(console.error);
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const getSourceBadge = (s: string) => s === "worker_reported" ? <span className="badge badge-worker">👷 Worker</span> : s === "driver_reported" ? <span className="badge badge-driver">🚛 Driver</span> : <span className="badge badge-ml">🤖 ML</span>;
 
@@ -21,7 +43,11 @@ export default function SurgePage() {
               <td className="text-center py-3 px-2">{getSourceBadge(a.fill_level_source)}</td>
               <td className="text-right py-3 px-2"><span className={`font-bold ${a.surge_score >= 8 ? "text-red-400" : "text-orange-400"}`}>{a.surge_score}</span></td>
               <td className="text-center py-3 px-2 text-[#8A8887]">{new Date(a.predicted_at).toLocaleTimeString("en-IN")}</td>
-              <td className="text-center py-3 px-2"><button className="btn-primary text-xs py-1.5 px-3">Reroute Truck</button></td>
+              <td className="text-center py-3 px-2">
+                <button className="btn-primary text-xs py-1.5 px-3" onClick={handleReroute} disabled={isOptimizing}>
+                  {isOptimizing ? "Routing..." : "Reroute Truck"}
+                </button>
+              </td>
             </tr>
           ))}</tbody>
         </table>

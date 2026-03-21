@@ -77,9 +77,68 @@ def complete_pickup(
         source_id=pickup.id,
     )
     db.add(fill_log)
+
+    # Mark the stop as completed in the route's zone_sequence
+    from app.models.route import Route, RouteStatus
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    route = db.query(Route).filter(
+        Route.truck_id == req.truck_id,
+        Route.date == today,
+        Route.status.in_([RouteStatus.pending, RouteStatus.active]),
+    ).first()
+    if route and route.zone_sequence:
+        updated = False
+        for stop in route.zone_sequence:
+            if stop.get("zone_id") == req.zone_id and not stop.get("completed"):
+                stop["completed"] = True
+                updated = True
+                break
+        if updated:
+            # Force SQLAlchemy to detect the JSON mutation
+            from sqlalchemy.orm.attributes import flag_modified
+            flag_modified(route, "zone_sequence")
+            # Check if all stops are now completed
+            all_done = all(s.get("completed") for s in route.zone_sequence)
+            if all_done:
+                route.status = RouteStatus.completed
+                route.completed_at = datetime.utcnow()
+    # --- Worker accuracy comparison & penalty ---
+    worker_comparison = None
+    four_hours_ago = datetime.utcnow() - timedelta(hours=4)
+    recent_worker = (
+        db.query(WasteWorkerReport)
+        .filter(
+            WasteWorkerReport.zone_id == req.zone_id,
+            WasteWorkerReport.reported_at >= four_hours_ago,
+        )
+        .order_by(WasteWorkerReport.reported_at.desc())
+        .first()
+    )
+    if recent_worker:
+        diff = abs(req.fill_level_found - recent_worker.reported_fill_level)
+        is_accurate = diff <= 20
+        worker_comparison = {
+            "worker_reported": round(recent_worker.reported_fill_level, 1),
+            "driver_found": round(req.fill_level_found, 1),
+            "difference": round(diff, 1),
+            "accurate": is_accurate,
+            "worker_name": None,
+        }
+        # Penalize the worker if inaccurate
+        worker_user = db.query(User).filter(User.id == recent_worker.worker_id).first()
+        if worker_user:
+            worker_comparison["worker_name"] = worker_user.name
+            if not is_accurate:
+                worker_user.penalty_count = (worker_user.penalty_count or 0) + 1
+                worker_user.accuracy_score = max(0, (worker_user.accuracy_score or 100) - 5)
+
     db.commit()
 
-    return {"pickup_id": pickup.id, "status": "completed"}
+    return {
+        "pickup_id": pickup.id,
+        "status": "completed",
+        "worker_comparison": worker_comparison,
+    }
 
 
 @router.get("/")
