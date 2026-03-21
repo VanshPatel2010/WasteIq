@@ -242,3 +242,64 @@ def get_my_zones(
         })
 
     return result
+
+
+@router.get("/my-rewards")
+def get_my_rewards(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.waste_worker)),
+):
+    """Returns reward history and total points for the logged-in waste worker."""
+    from app.models.reward import Reward
+
+    rewards = (
+        db.query(Reward)
+        .filter(Reward.worker_id == current_user.id)
+        .order_by(Reward.awarded_at.desc())
+        .limit(50)
+        .all()
+    )
+
+    return {
+        "total_points": current_user.reward_points or 0,
+        "reward_count": len(rewards),
+        "rewards": [
+            {
+                "id": r.id,
+                "points": r.points,
+                "reason": r.reason,
+                "fill_level_reported": r.fill_level_reported,
+                "fill_level_found": r.fill_level_found,
+                "difference": r.difference,
+                "awarded_at": r.awarded_at.isoformat() if r.awarded_at else None,
+            }
+            for r in rewards
+        ],
+    }
+
+
+@router.get("/leaderboard")
+def get_leaderboard(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Returns top 10 waste workers by reward points."""
+    workers = (
+        db.query(User)
+        .filter(User.role == UserRole.waste_worker, User.is_active == True)
+        .order_by(User.reward_points.desc())
+        .limit(10)
+        .all()
+    )
+
+    return [
+        {
+            "rank": i + 1,
+            "id": w.id,
+            "name": w.name,
+            "reward_points": w.reward_points or 0,
+            "accuracy_score": round(w.accuracy_score or 100, 1),
+            "is_current_user": w.id == current_user.id,
+        }
+        for i, w in enumerate(workers)
+    ]

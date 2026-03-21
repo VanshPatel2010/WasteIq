@@ -1,7 +1,7 @@
 import os
 import sys
 from sqlalchemy.orm import Session
-from database import engine, SessionLocal
+from database import engine, SessionLocal, Base
 from app.models.zone import Zone, ZoneType, FillLevelSource
 from app.models.truck import Truck, TruckStatus
 from app.models.user import User, UserRole
@@ -25,13 +25,14 @@ ZONES = [
 ]
 
 def seed_surat():
+    # Make sure all tables are created FIRST
+    Base.metadata.create_all(bind=engine)
+    
     db = SessionLocal()
-    print("Clearing old zones and trucks...")
+    print("Clearing old data...")
     db.query(Zone).delete()
     db.query(Truck).delete()
-    
-    # Also clear drivers to avoid unique constraint issues
-    db.query(User).filter(User.role == UserRole.driver).delete()
+    db.query(User).delete()
     db.commit()
 
     print("Adding 14 Surat Zones...")
@@ -45,6 +46,18 @@ def seed_surat():
             current_fill_level=20.0,
             fill_level_source=FillLevelSource.predicted,
         ))
+
+    print("Adding Core Demo Users...")
+    demo_users = [
+        ("admin@wasteiq.com", "Admin", UserRole.admin),
+        ("worker1@wasteiq.com", "Worker 1", UserRole.waste_worker),
+        ("kabadi@wasteiq.com", "Kabadiwalla", UserRole.kabadiwalla),
+        ("generator@wasteiq.com", "Generator", UserRole.generator),
+        ("receiver@wasteiq.com", "Receiver", UserRole.receiver)
+    ]
+    for email, name, role in demo_users:
+        db.add(User(email=email, password_hash=get_password_hash("password123"), name=name, role=role))
+    db.commit()
 
     print("Adding 15 Truck Drivers and Trucks...")
     for i in range(1, 16):
