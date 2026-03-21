@@ -13,19 +13,19 @@ export default function ZonesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">🗺️ Zone Map</h1>
-      <div className="card" style={{ minHeight: 600 }}><ZoneMap zones={zones} trucks={trucks} /></div>
-      <div className="card">
-        <h3 className="text-sm font-semibold mb-3">Zone Details</h3>
+      <h1 className="text-2xl font-bold text-[#1F2937]">🗺️ Zone Map</h1>
+      <div className="card shadow-md border-[#D6D3C8] p-2" style={{ minHeight: 600 }}><ZoneMap zones={zones} trucks={trucks} /></div>
+      <div className="card shadow-md border-[#D6D3C8]">
+        <h3 className="text-sm font-bold mb-5 text-[#1F2937] uppercase tracking-wider">Zone Details</h3>
         <table className="w-full text-sm">
-          <thead><tr className="border-b border-[#2A2A36] text-[#8A8887]"><th className="text-left py-2 px-2">Zone</th><th className="text-right py-2 px-2">Fill Level</th><th className="text-center py-2 px-2">Source</th><th className="text-center py-2 px-2">Type</th><th className="text-center py-2 px-2">Trust</th></tr></thead>
+          <thead><tr className="border-b border-[#D6D3C8] text-[#6B7280]"><th className="text-left py-4 px-3 font-semibold uppercase tracking-wider text-[10px]">Zone</th><th className="text-right py-4 px-3 font-semibold uppercase tracking-wider text-[10px]">Fill Level</th><th className="text-center py-4 px-3 font-semibold uppercase tracking-wider text-[10px]">Source</th><th className="text-center py-4 px-3 font-semibold uppercase tracking-wider text-[10px]">Type</th><th className="text-center py-4 px-3 font-semibold uppercase tracking-wider text-[10px]">Trust</th></tr></thead>
           <tbody>{zones.map(z => (
-            <tr key={z.id} className="border-b border-[#2A2A36] hover:bg-[#22222E]">
-              <td className="py-2 px-2 font-medium">{z.name}</td>
-              <td className="text-right py-2 px-2"><span className={z.current_fill_level > 75 ? "text-red-400" : z.current_fill_level > 40 ? "text-yellow-400" : "text-green-400"}>{Math.round(z.current_fill_level)}%</span></td>
-              <td className="text-center py-2 px-2">{getSourceBadge(z.fill_level_source)}</td>
-              <td className="text-center py-2 px-2 capitalize">{z.zone_type}</td>
-              <td className="text-center py-2 px-2">{Math.round(z.ml_trust_score * 100)}%</td>
+            <tr key={z.id} className="border-b border-[#D6D3C8] hover:bg-[#F0EDE6]/30 transition-colors">
+              <td className="py-4 px-3 font-semibold text-[#1F2937]">{z.name}</td>
+              <td className="text-right py-4 px-3 font-black"><span className={z.current_fill_level > 75 ? "text-[#B91C1C]" : z.current_fill_level > 40 ? "#C9A84C" : "text-[#15803D]"}>{Math.round(z.current_fill_level)}%</span></td>
+              <td className="text-center py-4 px-3">{getSourceBadge(z.fill_level_source)}</td>
+              <td className="text-center py-4 px-3 capitalize font-medium text-[#6B7280]">{z.zone_type}</td>
+              <td className="text-center py-4 px-3 font-bold text-[#1F2937]">{Math.round(z.ml_trust_score * 100)}%</td>
             </tr>
           ))}</tbody>
         </table>
