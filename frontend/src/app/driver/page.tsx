@@ -52,7 +52,6 @@ export default function DriverPage() {
       const sim = await api.getSimulationStatus();
       setSimStatus(sim);
       api.getRoutes({}).then(setRoutes);
-      api.getRoutes({ all: true }).then(setAllRoutes);
     } catch (err: any) {
       alert("Simulation failed: " + err.message);
     }
@@ -214,7 +213,7 @@ export default function DriverPage() {
         <h2 className="text-sm font-semibold text-[#8A8887] mb-3">📍 ROUTE MAP</h2>
         <div className="card mb-4 p-0 overflow-hidden">
           <Suspense fallback={<div className="h-[250px] flex items-center justify-center text-[#5F5E5A]">Loading map...</div>}>
-            <ZoneMap zones={zones} trucks={trucks} routes={allRoutes} />
+            <DriverRouteMap stops={sequence} />
           </Suspense>
         </div>
 
