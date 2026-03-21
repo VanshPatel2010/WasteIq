@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #534AB7;
+  --primary-light: #7B73D1;
+  --teal: #0F6E56;
+  --teal-light: #14A37F;
+  --amber: #854F0B;
+  --amber-light: #D4A017;
+  --danger: #A32D2D;
+  --danger-light: #E04848;
+  --gray: #5F5E5A;
+  --gray-light: #9A9894;
+  --orange: #C05621;
+  --orange-light: #E8833A;
+  --bg-dark: #0F0F12;
+  --bg-card: #1A1A22;
+  --bg-card-hover: #22222E;
+  --border: #2A2A36;
+  --text: #E8E6E3;
+  --text-muted: #8A8887;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg-dark);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@layer components {
+  .card { @apply bg-[#1A1A22] border border-[#2A2A36] rounded-xl p-6; }
+  .card-hover { @apply transition-all duration-300 hover:border-[#534AB7]/40 hover:shadow-lg hover:shadow-[#534AB7]/5; }
+  .btn-primary { @apply bg-[#534AB7] hover:bg-[#6B63CC] text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 active:scale-95; }
+  .btn-teal { @apply bg-[#0F6E56] hover:bg-[#14A37F] text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 active:scale-95; }
+  .btn-danger { @apply bg-[#A32D2D] hover:bg-[#C43939] text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 active:scale-95; }
+  .badge { @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium; }
+  .badge-ml { @apply bg-[#534AB7]/20 text-[#7B73D1]; }
+  .badge-worker { @apply bg-[#0F6E56]/20 text-[#14A37F]; }
+  .badge-driver { @apply bg-[#5F5E5A]/20 text-[#9A9894]; }
+  .input { @apply bg-[#22222E] border border-[#2A2A36] rounded-lg px-4 py-3 text-[#E8E6E3] placeholder-[#5F5E5A] focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7]/30 transition-all; }
+  .metric-card { @apply card card-hover flex flex-col gap-2; }
+  .sidebar-link { @apply flex items-center gap-3 px-4 py-3 rounded-lg text-[#8A8887] hover:text-white hover:bg-[#22222E] transition-all duration-200; }
+  .sidebar-link-active { @apply text-white bg-[#534AB7]/10 border-l-2 border-[#534AB7]; }
+  .fill-green { @apply bg-green-500/20 text-green-400; }
+  .fill-yellow { @apply bg-yellow-500/20 text-yellow-400; }
+  .fill-orange { @apply bg-orange-500/20 text-orange-400; }
+  .fill-red { @apply bg-red-500/20 text-red-400; }
+}
+
+/* Leaflet overrides for dark mode */
+.leaflet-container { background: #1A1A22 !important; border-radius: 12px; }
+.leaflet-popup-content-wrapper { background: #1A1A22 !important; color: #E8E6E3 !important; border: 1px solid #2A2A36 !important; border-radius: 12px !important; }
+.leaflet-popup-tip { background: #1A1A22 !important; }
+.leaflet-control-zoom a { background: #22222E !important; color: #E8E6E3 !important; border-color: #2A2A36 !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2A2A36; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3A3A46; }
+
+/* Mobile PWA */
+@media (max-width: 768px) {
+  .pwa-container { padding-bottom: env(safe-area-inset-bottom); }
+}
