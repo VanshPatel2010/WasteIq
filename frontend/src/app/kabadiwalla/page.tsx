@@ -45,62 +45,65 @@ export default function KabadiwalaPage() {
   if (loading || !user) return null;
 
   if (showHistory) return (
-    <div className="min-h-screen bg-[#0F0F12] pwa-container">
-      <div className="bg-[#1A1A22] p-4 flex items-center gap-3 border-b border-[#2A2A36]">
-        <button onClick={() => setShowHistory(false)} className="text-[#8A8887]">←</button><h2 className="font-bold">History</h2>
+    <div className="min-h-screen bg-[#F5F5F0] pwa-container text-[#1F2937]">
+      <div className="bg-white p-4 flex items-center gap-3 border-b border-[#D6D3C8] shadow-sm sticky top-0">
+        <button onClick={() => setShowHistory(false)} className="text-[#6B7280] font-bold p-2 hover:bg-[#F0EDE6] rounded-full transition-colors">←</button><h2 className="font-bold text-lg text-[#1F2937]">History</h2>
       </div>
       <div className="p-4">{logs.map(l => (
-        <div key={l.id} className="card mb-2 py-3 flex justify-between items-center">
-          <div><span className="text-lg mr-2">{materials.find(m => m.type === l.material_type)?.icon || "📦"}</span><span className="text-sm capitalize">{l.material_type}</span></div>
-          <div className="text-right"><span className="badge badge-worker capitalize">{l.quantity_estimate}</span><p className="text-xs text-[#8A8887] mt-1">{new Date(l.logged_at).toLocaleDateString("en-IN")}</p></div>
+        <div key={l.id} className="card mb-3 py-3 flex justify-between items-center shadow-sm border-[#D6D3C8]">
+          <div className="flex items-center"><span className="text-2xl mr-3 bg-[#F0EDE6] p-2 rounded-xl">{materials.find(m => m.type === l.material_type)?.icon || "📦"}</span><span className="text-sm font-bold capitalize text-[#1F2937]">{l.material_type}</span></div>
+          <div className="text-right"><span className="badge badge-worker capitalize shadow-sm border border-[#1B7A4A]/20">{l.quantity_estimate}</span><p className="text-[10px] uppercase tracking-wider font-bold text-[#6B7280] mt-1.5">{new Date(l.logged_at).toLocaleDateString("en-IN")}</p></div>
         </div>
       ))}</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#0F0F12] pwa-container flex flex-col">
-      <div className="bg-[#1A1A22] border-b border-[#2A2A36] p-4">
+    <div className="min-h-screen bg-[#F5F5F0] pwa-container flex flex-col text-[#1F2937]">
+      <div className="bg-white border-b border-[#D6D3C8] p-4 shadow-sm sticky top-0">
         <div className="flex items-center justify-between">
-          <div><h1 className="text-lg font-bold">{user.name}</h1><p className="text-sm text-[#8A8887]">Kabadiwalla</p></div>
-          <div className="flex gap-2"><button onClick={() => setShowHistory(true)} className="text-xs text-[#534AB7]">History</button><button onClick={logout} className="text-xs text-[#8A8887]">Logout</button></div>
+          <div><h1 className="text-lg font-bold text-[#1F2937]">{user.name}</h1><p className="text-sm text-[#6B7280]">Kabadiwalla</p></div>
+          <div className="flex items-center gap-4"><button onClick={() => setShowHistory(true)} className="text-xs font-bold text-[#1B7A4A] hover:underline">History</button><button onClick={logout} className="text-xs font-medium text-[#6B7280] hover:text-[#B91C1C]">Logout</button></div>
         </div>
       </div>
 
       <div className="flex-1 p-4 flex flex-col justify-center">
         {/* Step indicators */}
-        <div className="flex justify-center gap-2 mb-8">{[0,1,2].map(s => <div key={s} className={`w-3 h-3 rounded-full ${step >= s ? "bg-[#534AB7]" : "bg-[#2A2A36]"}`} />)}</div>
+        <div className="flex justify-center gap-3 mb-10">{[0,1,2].map(s => <div key={s} className={`w-3 h-3 rounded-full transition-colors ${step >= s ? "bg-[#1B7A4A]" : "bg-[#D6D3C8]"}`} />)}</div>
 
         {step === 0 && (
-          <div><h2 className="text-center text-lg font-bold mb-6">What material?</h2>
-            <div className="grid grid-cols-3 gap-3">{materials.map(m => (
-              <button key={m.type} onClick={() => { setMaterial(m.type); setStep(1); }} className="card card-hover p-6 text-center">
-                <span className="text-4xl block mb-2">{m.icon}</span><span className="text-sm">{m.label}</span>
+          <div><h2 className="text-center text-xl font-black mb-8 text-[#1F2937]">What material?</h2>
+            <div className="grid grid-cols-3 gap-4">{materials.map(m => (
+              <button key={m.type} onClick={() => { setMaterial(m.type); setStep(1); }} className="card card-hover p-6 text-center shadow-sm border-[#D6D3C8] hover:border-[#1B7A4A]/40 group flex flex-col items-center justify-center">
+                <span className="text-4xl block mb-3 group-hover:scale-110 transition-transform">{m.icon}</span><span className="text-xs font-bold text-[#1F2937]">{m.label}</span>
               </button>
             ))}</div></div>
         )}
 
         {step === 1 && (
-          <div><h2 className="text-center text-lg font-bold mb-6">How much?</h2>
-            <div className="space-y-3">{quantities.map(q => (
-              <button key={q.value} onClick={() => { setQuantity(q.value); setStep(2); }} className="card card-hover w-full p-6 text-center">
-                <span className="text-3xl block mb-2">{q.icon}</span><span className="text-lg font-bold">{q.label}</span><p className="text-sm text-[#8A8887]">{q.desc}</p>
+          <div><h2 className="text-center text-xl font-black mb-8 text-[#1F2937]">How much?</h2>
+            <div className="space-y-4">{quantities.map(q => (
+              <button key={q.value} onClick={() => { setQuantity(q.value); setStep(2); }} className="card card-hover w-full p-6 text-left shadow-sm border-[#D6D3C8] hover:border-[#1B7A4A]/40 flex items-center gap-6 group">
+                <span className="text-5xl group-hover:scale-110 transition-transform">{q.icon}</span>
+                <div><span className="text-xl font-black block text-[#1F2937]">{q.label}</span><p className="text-sm text-[#6B7280] font-medium">{q.desc}</p></div>
               </button>
             ))}</div></div>
         )}
 
         {step === 2 && (
           <div className="text-center">
-            <span className="text-6xl block mb-4">{materials.find(m => m.type === material)?.icon}</span>
-            <h2 className="text-xl font-bold mb-2 capitalize">{material}</h2>
-            <p className="text-[#8A8887] capitalize mb-8">{quantity} quantity</p>
-            <button onClick={handleSubmit} className="btn-teal w-full py-5 text-lg font-bold">✓ LOG PICKUP</button>
-            <button onClick={() => setStep(0)} className="text-[#8A8887] text-sm mt-4 block mx-auto">Start Over</button>
+            <div className="w-32 h-32 mx-auto bg-white rounded-full flex items-center justify-center shadow-lg border border-[#D6D3C8] mb-6">
+              <span className="text-6xl block">{materials.find(m => m.type === material)?.icon}</span>
+            </div>
+            <h2 className="text-3xl font-black mb-2 capitalize text-[#1F2937]">{material}</h2>
+            <p className="text-[#6B7280] capitalize mb-10 text-lg font-medium">{quantity} quantity</p>
+            <button onClick={handleSubmit} className="btn-primary w-full py-5 text-lg font-bold shadow-xl">✓ LOG PICKUP</button>
+            <button onClick={() => setStep(0)} className="text-[#6B7280] font-bold text-sm mt-6 block mx-auto hover:text-[#1F2937]">Start Over</button>
           </div>
         )}
       </div>
 
-      {toast && <div className="fixed bottom-4 left-4 right-4 bg-[#0F6E56] text-white p-4 rounded-xl text-sm font-medium shadow-lg">{toast}</div>}
+      {toast && <div className="fixed bottom-4 left-4 right-4 bg-[#1B7A4A] text-white p-4 rounded-xl text-sm font-bold shadow-2xl animate-bounce text-center">{toast}</div>}
     </div>
   );
 }

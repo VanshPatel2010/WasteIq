@@ -13,7 +13,7 @@ export default function LoginPage() {
 
   const demoAccounts = [
     { email: "admin@wasteiq.com", role: "Municipal Admin", icon: "🏛️" },
-    { email: "driver@wasteiq.com", role: "Truck Driver", icon: "🚛" },
+    { email: "driver1@surat.gov.in", role: "Truck Driver", icon: "🚛" },
     { email: "worker1@wasteiq.com", role: "Waste Worker", icon: "👷" },
     { email: "kabadi@wasteiq.com", role: "Kabadiwalla", icon: "♻️" },
     { email: "generator@wasteiq.com", role: "Surplus Generator", icon: "🏨" },
@@ -50,27 +50,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "linear-gradient(135deg, #0F0F12 0%, #1A1028 50%, #0F0F12 100%)" }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "linear-gradient(135deg, #F5F5F0 0%, #E8E8E0 50%, #F5F5F0 100%)" }}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-[#534AB7] flex items-center justify-center text-xl font-bold">W</div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#534AB7] to-[#7B73D1] bg-clip-text text-transparent">WasteIQ</h1>
+            <div className="w-10 h-10 rounded-xl bg-[#1B7A4A] text-white flex items-center justify-center text-xl font-bold">W</div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#1B7A4A] to-[#24A65A] bg-clip-text text-transparent">WasteIQ</h1>
           </div>
-          <p className="text-[#8A8887] text-sm">From reactive to predictive — ground truth first.</p>
+          <p className="text-[#6B7280] text-sm">From reactive to predictive — ground truth first.</p>
         </div>
 
         <div className="card p-8">
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm text-[#8A8887] mb-2">Email</label>
+              <label className="block text-sm text-[#6B7280] mb-2">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input w-full" placeholder="Enter your email" />
             </div>
             <div>
-              <label className="block text-sm text-[#8A8887] mb-2">Password</label>
+              <label className="block text-sm text-[#6B7280] mb-2">Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input w-full" placeholder="Enter your password" />
             </div>
-            {error && <p className="text-[#E04848] text-sm bg-[#A32D2D]/10 p-3 rounded-lg">{error}</p>}
+            {error && <p className="text-[#EF4444] text-sm bg-[#B91C1C]/10 p-3 rounded-lg">{error}</p>}
             <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
               {loading ? "Signing in..." : "Sign In"}
             </button>
@@ -78,13 +78,13 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-6">
-          <p className="text-[#8A8887] text-xs text-center mb-3">Quick Demo Login</p>
+          <p className="text-[#6B7280] text-xs text-center mb-3">Quick Demo Login</p>
           <div className="grid grid-cols-2 gap-2">
             {demoAccounts.map((acc) => (
-              <button key={acc.email} onClick={() => quickLogin(acc.email)} className="card card-hover p-3 text-left hover:border-[#534AB7]/40 cursor-pointer transition-all">
+              <button key={acc.email} onClick={() => quickLogin(acc.email)} className="card card-hover p-3 text-left hover:border-[#1B7A4A]/40 cursor-pointer transition-all">
                 <span className="text-lg">{acc.icon}</span>
                 <p className="text-xs font-medium mt-1">{acc.role}</p>
-                <p className="text-[10px] text-[#8A8887] truncate">{acc.email}</p>
+                <p className="text-[10px] text-[#6B7280] truncate">{acc.email}</p>
               </button>
             ))}
           </div>

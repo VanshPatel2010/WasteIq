@@ -11,6 +11,7 @@ from app.models.zone import Zone, ZoneType, FillLevelSource
 from app.models.truck import Truck, TruckStatus
 from app.models.route import Route, RouteStatus
 from app.models.waste_worker_report import WasteWorkerReport
+from app.services.simulation_state import get_current_time
 
 # --- Zone-type waste generation rates (kg per bin per hour) ---
 ZONE_TYPE_RATES = {
@@ -43,7 +44,7 @@ def _get_effective_fill(db: Session, zone: Zone) -> tuple[float, float]:
 
     Priority: worker report (last 2h) > driver report > ML prediction.
     """
-    now = datetime.utcnow()
+    now = get_current_time()
     two_hours_ago = now - timedelta(hours=2)
 
     worker_report = (
@@ -158,7 +159,10 @@ def _greedy_route(scored_zones: list[dict], truck_lat: float, truck_lng: float, 
 def optimize_all_routes(db: Session):
     """Optimize routes for all available trucks today using dynamic urgency."""
     today = datetime.utcnow().strftime("%Y-%m-%d")
-    trucks = db.query(Truck).filter(Truck.status != TruckStatus.completed).all()
+    trucks = db.query(Truck).filter(
+        Truck.status != TruckStatus.completed,
+        Truck.is_active == True
+    ).all()
     zones = db.query(Zone).all()
 
     if not trucks or not zones:

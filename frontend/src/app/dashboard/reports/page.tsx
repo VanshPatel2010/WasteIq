@@ -21,23 +21,35 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">📈 Reports</h1>
-        <button className="btn-primary text-sm" onClick={handleExport}>Export CSV</button>
+        <div>
+          <h1 className="text-2xl font-bold text-[#1F2937]">📈 Reports</h1>
+          <p className="text-[#6B7280] text-sm">Historical analytical data & exports</p>
+        </div>
+        <button className="btn-primary text-sm shadow-lg shadow-[#1B7A4A]/20" onClick={handleExport}>Export CSV</button>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="card"><h3 className="text-sm font-semibold mb-3">Zone Fill Level Summary</h3>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="card shadow-md border-[#D6D3C8]">
+          <h3 className="text-sm font-bold mb-6 text-[#1F2937] uppercase tracking-wider">Zone Fill Level Summary</h3>
           {zones.map(z => (
-            <div key={z.id} className="flex items-center gap-3 py-2 border-b border-[#2A2A36] last:border-0">
-              <span className="text-sm flex-1">{z.name}</span>
-              <div className="w-32 h-2 bg-[#2A2A36] rounded-full"><div className="h-full rounded-full transition-all" style={{ width: `${z.current_fill_level}%`, background: z.current_fill_level > 75 ? "#E04848" : z.current_fill_level > 40 ? "#D4A017" : "#14A37F" }} /></div>
-              <span className="text-xs text-[#8A8887] w-12 text-right">{Math.round(z.current_fill_level)}%</span>
+            <div key={z.id} className="flex items-center gap-4 py-3 border-b border-[#D6D3C8] last:border-0 hover:bg-[#F0EDE6]/20 px-2 -mx-2 rounded-lg transition-colors">
+              <span className="text-sm font-semibold text-[#1F2937] flex-1">{z.name}</span>
+              <div className="w-32 h-2.5 bg-[#D6D3C8] rounded-full overflow-hidden shadow-inner flex-shrink-0">
+                <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${z.current_fill_level}%`, background: z.current_fill_level > 75 ? "#B91C1C" : z.current_fill_level > 40 ? "#C9A84C" : "#15803D" }} />
+              </div>
+              <span className="text-xs font-black text-[#1F2937] w-12 text-right">{Math.round(z.current_fill_level)}%</span>
             </div>
           ))}
         </div>
-        <div className="card"><h3 className="text-sm font-semibold mb-3">Data Source Distribution</h3>
+        <div className="card shadow-md border-[#D6D3C8]">
+          <h3 className="text-sm font-bold mb-6 text-[#1F2937] uppercase tracking-wider">Data Source Distribution</h3>
           {["worker_reported", "predicted", "driver_reported"].map(s => {
             const count = zones.filter(z => z.fill_level_source === s).length;
-            return <div key={s} className="flex justify-between py-2 border-b border-[#2A2A36]"><span className="text-sm capitalize">{s.replace(/_/g, " ")}</span><span className="text-sm font-bold">{count} zones</span></div>;
+            return (
+              <div key={s} className="flex justify-between items-center py-4 border-b border-[#D6D3C8] last:border-0 hover:bg-[#F0EDE6]/20 px-2 -mx-2 rounded-lg transition-colors">
+                <span className="text-sm font-medium capitalize text-[#1F2937]">{s.replace(/_/g, " ")}</span>
+                <span className="text-sm font-black text-[#1B7A4A] bg-[#1B7A4A]/5 px-3 py-1 rounded-full">{count} zones</span>
+              </div>
+            );
           })}
         </div>
       </div>
