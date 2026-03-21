@@ -10,6 +10,7 @@ import logging
 
 from database import SessionLocal
 from app.services.route_optimizer import re_optimize_active_routes
+from app.services.simulation_state import get_current_time
 
 logger = logging.getLogger("wasteiq.scheduler")
 

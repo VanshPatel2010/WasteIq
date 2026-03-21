@@ -4,12 +4,15 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { api } from "@/lib/api";
 
-const DriverRouteMap = lazy(() => import("@/components/DriverRouteMap"));
+const ZoneMap = lazy(() => import("@/components/ZoneMap"));
 
 export default function DriverPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const [routes, setRoutes] = useState<any[]>([]);
+  const [allRoutes, setAllRoutes] = useState<any[]>([]);
+  const [zones, setZones] = useState<any[]>([]);
+  const [trucks, setTrucks] = useState<any[]>([]);
   const [pickups, setPickups] = useState<any[]>([]);
   const [completing, setCompleting] = useState<any>(null);
   const [fillFound, setFillFound] = useState(50);
@@ -22,6 +25,9 @@ export default function DriverPage() {
     if (!user) return;
     const fetchData = () => {
       api.getRoutes({}).then(setRoutes);
+      api.getRoutes({ all: true }).then(setAllRoutes);
+      api.getZones().then(setZones);
+      api.getTrucks().then(setTrucks);
       api.getPickups().then(setPickups);
     };
     fetchData();
@@ -130,7 +136,7 @@ export default function DriverPage() {
         <h2 className="text-sm font-semibold text-[#8A8887] mb-3">📍 ROUTE MAP</h2>
         <div className="card mb-4 p-0 overflow-hidden">
           <Suspense fallback={<div className="h-[250px] flex items-center justify-center text-[#5F5E5A]">Loading map...</div>}>
-            <DriverRouteMap stops={sequence} />
+            <ZoneMap ReactLeaflet="fix-tsx-parser" zones={zones} trucks={trucks} routes={allRoutes} />
           </Suspense>
         </div>
 

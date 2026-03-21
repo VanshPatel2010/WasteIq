@@ -17,6 +17,7 @@ router = APIRouter(prefix="/api/routes", tags=["routes"])
 def get_routes(
     date: str | None = None,
     truck_id: int | None = None,
+    all: bool = False,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -26,8 +27,8 @@ def get_routes(
     if truck_id:
         query = query.filter(Route.truck_id == truck_id)
 
-    # If driver, only show their routes
-    if current_user.role == UserRole.driver:
+    # If driver, only show their routes unless all=True is requested
+    if current_user.role == UserRole.driver and not all:
         truck = db.query(Truck).filter(Truck.driver_id == current_user.id).first()
         if truck:
             query = query.filter(Route.truck_id == truck.id)

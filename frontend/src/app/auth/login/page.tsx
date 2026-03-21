@@ -13,7 +13,7 @@ export default function LoginPage() {
 
   const demoAccounts = [
     { email: "admin@wasteiq.com", role: "Municipal Admin", icon: "🏛️" },
-    { email: "driver@wasteiq.com", role: "Truck Driver", icon: "🚛" },
+    { email: "driver1@surat.gov.in", role: "Truck Driver", icon: "🚛" },
     { email: "worker1@wasteiq.com", role: "Waste Worker", icon: "👷" },
     { email: "kabadi@wasteiq.com", role: "Kabadiwalla", icon: "♻️" },
     { email: "generator@wasteiq.com", role: "Surplus Generator", icon: "🏨" },
