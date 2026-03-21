@@ -1,6 +1,6 @@
 """Truck model."""
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, Enum, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Enum, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 import enum
@@ -10,6 +10,7 @@ class TruckStatus(str, enum.Enum):
     idle = "idle"
     on_route = "on_route"
     completed = "completed"
+    off_duty = "off_duty"
 
 
 class Truck(Base):
@@ -22,6 +23,7 @@ class Truck(Base):
     current_lng = Column(Float, nullable=True)
     driver_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     status = Column(Enum(TruckStatus), default=TruckStatus.idle)
+    is_active = Column(Boolean, default=True)
     municipality_id = Column(Integer, ForeignKey("organisations.id"), nullable=True)
 
     driver = relationship("User", back_populates="truck")

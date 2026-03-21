@@ -35,6 +35,56 @@ app.include_router(accuracy.router)
 app.include_router(surplus.router)
 app.include_router(kabadiwalla.router)
 app.include_router(organisations.router)
+from pydantic import BaseModel
+from typing import Optional
+from app.services.simulation_state import set_simulated_time, get_current_time, clear_simulated_time
+from app.services.fleet_manager import calculate_and_allocate_fleet
+from datetime import datetime
+
+class SimulationDateRequest(BaseModel):
+    date_iso: Optional[str] = None
+
+@app.post("/api/simulation/set-date")
+def set_simulation_date(req: SimulationDateRequest):
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        if not req.date_iso:
+            clear_simulated_time()
+            fleet_res = calculate_and_allocate_fleet(db)
+            return {"status": "reset", "current_time": get_current_time().isoformat(), "fleet_allocation": fleet_res}
+        
+        # Handle JS ISO string with Z
+        iso_str = req.date_iso.replace("Z", "+00:00")
+        dt = datetime.fromisoformat(iso_str)
+        # Strip tzinfo for naive local time comparison logic in predictor
+        dt = dt.replace(tzinfo=None)
+        
+        set_simulated_time(dt)
+        
+        from app.services.surge_predictor import run_predictions_for_all_zones
+        from app.services.route_optimizer import re_optimize_active_routes
+        
+        preds = run_predictions_for_all_zones(db)
+        fleet_res = calculate_and_allocate_fleet(db, target_date=dt)
+        re_optimize_active_routes(db)
+        
+        return {
+            "status": "simulated",
+            "current_time": dt.isoformat(),
+            "predictions_updated": preds,
+            "fleet_allocation": fleet_res
+        }
+    finally:
+        db.close()
+
+@app.get("/api/simulation/status")
+def get_simulation_status():
+    from app.services.simulation_state import _simulated_time
+    return {
+        "is_simulated": _simulated_time is not None,
+        "current_time": get_current_time().isoformat()
+    }
 
 
 @app.get("/")
@@ -102,6 +152,7 @@ def get_workers():
                 "zones": [z.name for z in zones],
                 "penalty_count": w.penalty_count or 0,
                 "accuracy_score": round(w.accuracy_score or 100, 1),
+                "reward_points": w.reward_points or 0,
                 "is_active": w.is_active,
             })
         return result

@@ -13,6 +13,10 @@ export default function DriverPage() {
   const [pickups, setPickups] = useState<any[]>([]);
   const [completing, setCompleting] = useState<any>(null);
   const [fillFound, setFillFound] = useState(50);
+  const [fillFoundLabel, setFillFoundLabel] = useState<"low" | "medium" | "high">("medium");
+  const fillLevelMap = { low: 25, medium: 50, high: 85 };
+  const getFillLabel = (val: number) => val <= 35 ? "Low" : val <= 65 ? "Medium" : "High";
+  const getFillLabelColor = (label: string) => label === "High" || label === "high" ? "#E04848" : label === "Medium" || label === "medium" ? "#D4A017" : "#14A37F";
   const [weight, setWeight] = useState("");
   const [toast, setToast] = useState("");
   const [comparison, setComparison] = useState<any>(null);
@@ -67,16 +71,16 @@ export default function DriverPage() {
         <div className="space-y-3 mb-4">
           <div className="flex justify-between items-center p-3 rounded-lg bg-[#22222E]">
             <span className="text-[#8A8887]">👷 Worker reported</span>
-            <span className="font-bold text-lg">{comparison.worker_reported}%</span>
+            <span className="font-bold text-lg" style={{ color: getFillLabelColor(getFillLabel(comparison.worker_reported)) }}>{getFillLabel(comparison.worker_reported)}</span>
           </div>
           <div className="flex justify-between items-center p-3 rounded-lg bg-[#22222E]">
             <span className="text-[#8A8887]">🚛 You found</span>
-            <span className="font-bold text-lg">{comparison.driver_found}%</span>
+            <span className="font-bold text-lg" style={{ color: getFillLabelColor(getFillLabel(comparison.driver_found)) }}>{getFillLabel(comparison.driver_found)}</span>
           </div>
           <div className="flex justify-between items-center p-3 rounded-lg" style={{ background: comparison.accurate ? "rgba(20,163,127,0.15)" : "rgba(224,72,72,0.15)" }}>
-            <span className="text-[#8A8887]">Difference</span>
+            <span className="text-[#8A8887]">Match</span>
             <span className="font-bold text-lg" style={{ color: comparison.accurate ? "#14A37F" : "#E04848" }}>
-              {comparison.difference}%
+              {comparison.accurate ? "✓ Match" : "✗ Mismatch"}
             </span>
           </div>
         </div>
@@ -85,7 +89,23 @@ export default function DriverPage() {
             ⚠️ Worker {comparison.worker_name || "Unknown"} has been penalized for inaccurate reporting.
           </p>
         )}
-        {comparison.accurate && (
+        {comparison.accurate && comparison.reward_awarded && (
+          <div className="rounded-lg p-4 mb-4" style={{ background: "linear-gradient(135deg, rgba(212,160,23,0.15) 0%, rgba(20,163,127,0.15) 100%)" }}>
+            <div className="text-center">
+              <p className="text-2xl mb-1">{comparison.reward_awarded.points >= 15 ? "🌟" : "🎉"}</p>
+              <p className="text-sm font-bold text-[#14A37F]">
+                Worker {comparison.worker_name || "Unknown"} earned +{comparison.reward_awarded.points} reward points!
+              </p>
+              {comparison.reward_awarded.points >= 15 && (
+                <p className="text-xs text-[#D4A017] mt-1">⭐ Bonus points for high accuracy!</p>
+              )}
+              <p className="text-xs text-[#8A8887] mt-1">
+                Total points: {comparison.reward_awarded.total_points}
+              </p>
+            </div>
+          </div>
+        )}
+        {comparison.accurate && !comparison.reward_awarded && (
           <p className="text-xs text-[#14A37F] text-center mb-4">
             ✅ Worker {comparison.worker_name || "Unknown"}&apos;s report is within acceptable range.
           </p>
@@ -103,9 +123,24 @@ export default function DriverPage() {
       <button onClick={() => setCompleting(null)} className="text-[#8A8887] mb-4">← Back</button>
       <h2 className="text-xl font-bold mb-6">Complete Pickup: {completing.zone_name}</h2>
       <div className="card mb-4">
-        <label className="text-sm text-[#8A8887] mb-2 block">Fill level found</label>
-        <div className="text-center text-4xl font-bold mb-4" style={{ color: fillFound > 75 ? "#E04848" : fillFound > 40 ? "#D4A017" : "#14A37F" }}>{fillFound}%</div>
-        <input type="range" min={0} max={100} value={fillFound} onChange={e => setFillFound(Number(e.target.value))} className="w-full" />
+        <label className="text-sm text-[#8A8887] mb-3 block">Fill level found</label>
+        <div className="grid grid-cols-3 gap-3">
+          {(["low", "medium", "high"] as const).map(level => (
+            <button
+              key={level}
+              onClick={() => { setFillFoundLabel(level); setFillFound(fillLevelMap[level]); }}
+              className={`py-5 px-3 rounded-xl text-center transition-all border-2 ${
+                fillFoundLabel === level
+                  ? level === "low" ? "border-[#14A37F] bg-[#14A37F]/15" : level === "medium" ? "border-[#D4A017] bg-[#D4A017]/15" : "border-[#E04848] bg-[#E04848]/15"
+                  : "border-[#2A2A36] bg-[#22222E]"
+              }`}
+            >
+              <div className="text-3xl mb-2">{level === "low" ? "🟢" : level === "medium" ? "🟡" : "🔴"}</div>
+              <p className="text-sm font-bold capitalize" style={{ color: level === "low" ? "#14A37F" : level === "medium" ? "#D4A017" : "#E04848" }}>{level}</p>
+              <p className="text-xs text-[#8A8887] mt-1">{level === "low" ? "Nearly empty" : level === "medium" ? "Half full" : "Almost full"}</p>
+            </button>
+          ))}
+        </div>
       </div>
       <div className="card mb-6">
         <label className="text-sm text-[#8A8887] mb-2 block">Weight collected (kg)</label>
@@ -142,7 +177,7 @@ export default function DriverPage() {
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${stop.completed ? "bg-green-500/20 text-green-400" : "bg-[#534AB7]/20 text-[#534AB7]"}`}>{stop.order}</div>
               <div className="flex-1">
                 <p className="font-medium">{stop.zone_name || `Zone ${stop.zone_id}`}</p>
-                <p className="text-xs text-[#8A8887]">Fill: {Math.round(stop.fill_level || 0)}% {stop.distance_km ? `• ${stop.distance_km}km away` : ""}</p>
+                <p className="text-xs text-[#8A8887]">Fill: {getFillLabel(stop.fill_level || 0)} {stop.distance_km ? `• ${stop.distance_km}km away` : ""}</p>
               </div>
               {!stop.completed && <button onClick={() => setCompleting(stop)} className="btn-teal py-2 px-3 text-sm">Complete</button>}
               {stop.completed && <span className="badge fill-green">Done ✓</span>}
@@ -153,7 +188,7 @@ export default function DriverPage() {
         <h2 className="text-sm font-semibold text-[#8A8887] mt-6 mb-3">RECENT PICKUPS</h2>
         {pickups.slice(0, 5).map(p => (
           <div key={p.id} className="card mb-2 py-3">
-            <div className="flex justify-between"><span className="text-sm">{p.zone_name}</span><span className="text-xs text-[#8A8887]">{p.fill_level_found}% • {p.weight_collected_kg || "—"}kg</span></div>
+            <div className="flex justify-between"><span className="text-sm">{p.zone_name}</span><span className="text-xs text-[#8A8887]">{getFillLabel(p.fill_level_found)} • {p.weight_collected_kg || "—"}kg</span></div>
           </div>
         ))}
       </div>

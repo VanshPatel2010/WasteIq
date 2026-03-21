@@ -1,19 +1,29 @@
-"""Surge predictor service — Prophet + XGBoost for fill level prediction."""
-import random
+import pandas as pd
+import joblib
+import os
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from app.models.zone import Zone, FillLevelSource
 from app.models.surge_prediction import SurgePrediction
 from app.models.waste_worker_report import WasteWorkerReport
 from app.models.zone_fill_level_log import ZoneFillLevelLog, FillLevelChangeSource
+from app.services.simulation_state import get_current_time
 
+MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'models', 'waste_model.joblib')
+_model = None
+
+def get_model():
+    global _model
+    if _model is None and os.path.exists(MODEL_PATH):
+        _model = joblib.load(MODEL_PATH)
+    return _model
 
 def run_predictions_for_all_zones(db: Session):
-    """Run surge predictions for all zones (zone-aware)."""
+    """Run surge predictions for all zones using XGBoost ML Model."""
     zones = db.query(Zone).all()
     predictions_created = 0
     skipped = 0
-    now = datetime.utcnow()
+    now = get_current_time()
     two_hours_ago = now - timedelta(hours=2)
     
     for zone in zones:
@@ -27,7 +37,7 @@ def run_predictions_for_all_zones(db: Session):
             skipped += 1
             continue
         
-        # Generate prediction using synthetic model
+        # Generate prediction using ML model
         predicted_fill = _generate_prediction(zone, now)
         
         # Apply correction factor
@@ -36,7 +46,7 @@ def run_predictions_for_all_zones(db: Session):
         predicted_fill = max(0, min(100, predicted_fill))
         
         # Calculate confidence with trust score
-        base_confidence = 0.75 + random.uniform(-0.1, 0.15)
+        base_confidence = 0.85
         final_confidence = base_confidence * zone.ml_trust_score
         
         # Calculate surge score
@@ -48,7 +58,7 @@ def run_predictions_for_all_zones(db: Session):
             predicted_fill_level=round(predicted_fill, 1),
             surge_score=round(surge_score, 1),
             confidence=round(final_confidence, 2),
-            model_version="v1.0-synthetic",
+            model_version="v2.0-xgboost",
             features_used={"day_of_week": now.weekday(), "hour": now.hour, "zone_type": zone.zone_type.value},
         )
         db.add(prediction)
@@ -71,29 +81,48 @@ def run_predictions_for_all_zones(db: Session):
 
 
 def _generate_prediction(zone: Zone, now: datetime) -> float:
-    """Synthetic prediction using zone characteristics."""
-    base = zone.current_fill_level if zone.current_fill_level > 0 else 30
+    """Predict waste kg from XGBoost and convert to fill level % (assuming 100kg = 100%)."""
+    model = get_model()
+    if not model:
+        # Fallback if model not loaded
+        return zone.current_fill_level if zone.current_fill_level > 0 else 30.0
+        
     hour = now.hour
-    day = now.weekday()
+    day_of_week = now.weekday()
+    month = now.month
+    is_weekend = 1 if day_of_week >= 5 else 0
     
-    # Time-based patterns
-    if 6 <= hour <= 10:
-        time_factor = 1.2
-    elif 16 <= hour <= 20:
-        time_factor = 1.15
-    else:
-        time_factor = 0.9
+    # season
+    if month in [11, 12, 1, 2]: season = 0
+    elif month in [3, 4, 5, 6]: season = 1
+    else: season = 2
     
-    # Day-based patterns
-    day_factor = 1.1 if day < 5 else 0.85
+    # festival (approx dates for demo UI)
+    festival = 0
+    if month == 10 or (month == 11 and now.day <= 5):
+        if now.day >= 15 and month == 10: festival = 1  # Navratri approx
+        if (month == 10 and now.day >= 24) or (month == 11 and now.day <= 2): festival = 2 # Diwali
+    elif month == 1 and 14 <= now.day <= 15:
+        festival = 3
+        
+    type_map = {"residential": 0, "commercial": 1, "industrial": 2, "market": 3}
+    z_type = type_map.get(zone.zone_type.value, 0)
     
-    # Zone type patterns
-    type_factors = {"residential": 1.0, "commercial": 1.2, "industrial": 0.9, "market": 1.4}
-    zone_factor = type_factors.get(zone.zone_type.value, 1.0)
+    df = pd.DataFrame([{
+        "zone_id": zone.id,
+        "zone_type_encoded": z_type,
+        "hour": hour,
+        "day_of_week": day_of_week,
+        "month": month,
+        "is_weekend": is_weekend,
+        "season": season,
+        "festival": festival
+    }])
     
-    predicted = base * time_factor * day_factor * zone_factor
-    predicted += random.uniform(-8, 12)
-    return max(0, min(100, predicted))
+    pred_kg = float(model.predict(df)[0])
+    # Assume max capacity of a single zone is roughly 120kg for this demo
+    fill_percent = (pred_kg / 120.0) * 100
+    return max(0, min(100, fill_percent))
 
 
 def _calculate_surge_score(fill_level: float) -> float:
@@ -106,3 +135,4 @@ def _calculate_surge_score(fill_level: float) -> float:
         return 3.0 + (fill_level - 50) * 0.12
     else:
         return fill_level * 0.06
+

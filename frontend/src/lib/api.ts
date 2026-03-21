@@ -39,8 +39,10 @@ class ApiClient {
   register(data: any) { return this.post("/api/auth/register", data); }
   me() { return this.get("/api/auth/me"); }
 
-  // Dashboard
+  // Dashboard & Simulation
   dashboardStats() { return this.get("/api/dashboard/stats"); }
+  setSimulationDate(iso_date: string | null) { return this.post("/api/simulation/set-date", { date_iso: iso_date }); }
+  getSimulationStatus() { return this.get("/api/simulation/status"); }
 
   // Zones
   getZones() { return this.get("/api/zones/"); }
@@ -52,6 +54,8 @@ class ApiClient {
   getReports(params?: any) { const q = params ? "?" + new URLSearchParams(params).toString() : ""; return this.get(`/api/waste-worker/reports${q}`); }
   getMyZones() { return this.get("/api/waste-worker/my-zones"); }
   getWorkers() { return this.get("/api/workers"); }
+  getMyRewards() { return this.get("/api/waste-worker/my-rewards"); }
+  getLeaderboard() { return this.get("/api/waste-worker/leaderboard"); }
 
   // Trucks & Routes
   getTrucks() { return this.get("/api/trucks/"); }

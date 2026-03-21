@@ -29,8 +29,10 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     penalty_count = Column(Integer, default=0)
     accuracy_score = Column(Float, default=100.0)
+    reward_points = Column(Integer, default=0)
 
     organisation = relationship("Organisation", back_populates="users")
+    rewards = relationship("Reward", back_populates="worker")
     waste_worker_reports = relationship("WasteWorkerReport", back_populates="worker")
     assigned_zones = relationship("Zone", back_populates="assigned_waste_worker", foreign_keys="Zone.assigned_waste_worker_id")
     truck = relationship("Truck", back_populates="driver", uselist=False)
