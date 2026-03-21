@@ -31,12 +31,12 @@ export default function FleetPage() {
         ))}
       </div>
       <div className="card">
-        <h3 className="text-sm font-semibold mb-3">Today&apos;s Routes</h3>
+        <h3 className="text-sm font-semibold mb-3 text-[#1F2937]">Today&apos;s Routes</h3>
         {routes.map((r: any) => (
-          <div key={r.id} className="py-3 border-b border-[#2A2A36]">
-            <div className="flex justify-between"><span className="font-medium">Route #{r.id}</span><span className={`badge ${r.status === "completed" ? "fill-green" : r.status === "active" ? "badge-worker" : "badge-ml"}`}>{r.status}</span></div>
-            <p className="text-xs text-[#8A8887] mt-1">{r.total_distance_km}km • {r.estimated_duration_mins}min • {r.reoptimized_count} re-optimizations</p>
-            <div className="flex gap-1 mt-2 flex-wrap">{(r.zone_sequence || []).map((z: any, i: number) => <span key={i} className={`text-xs px-2 py-1 rounded ${z.completed ? "bg-green-500/20 text-green-400" : "bg-[#22222E] text-[#8A8887]"}`}>{z.zone_name || `Zone ${z.zone_id}`}</span>)}</div>
+          <div key={r.id} className="py-3 border-b border-[#D6D3C8] last:border-0 hover:bg-[#F0EDE6]/30 px-2 -mx-2 rounded-lg transition-colors">
+            <div className="flex justify-between"><span className="font-medium text-[#1F2937]">Route #{r.id}</span><span className={`badge ${r.status === "completed" ? "fill-green" : r.status === "active" ? "badge-worker" : "badge-ml"}`}>{r.status}</span></div>
+            <p className="text-xs text-[#6B7280] mt-1">{r.total_distance_km}km • {r.estimated_duration_mins}min • {r.reoptimized_count} re-optimizations</p>
+            <div className="flex gap-1 mt-2 flex-wrap">{(r.zone_sequence || []).map((z: any, i: number) => <span key={i} className={`text-xs px-2 py-1 rounded ${z.completed ? "bg-green-500/10 text-green-700" : "bg-[#F0EDE6] text-[#6B7280]"}`}>{z.zone_name || `Zone ${z.zone_id}`}</span>)}</div>
           </div>
         ))}
       </div>
