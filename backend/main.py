@@ -102,6 +102,7 @@ def get_workers():
                 "zones": [z.name for z in zones],
                 "penalty_count": w.penalty_count or 0,
                 "accuracy_score": round(w.accuracy_score or 100, 1),
+                "reward_points": w.reward_points or 0,
                 "is_active": w.is_active,
             })
         return result
