@@ -1,10 +1,11 @@
 "use client";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { api } from "@/lib/api";
+import dynamic from "next/dynamic";
 
-const DriverRouteMap = lazy(() => import("@/components/DriverRouteMap"));
+const DriverRouteMap = dynamic(() => import("@/components/DriverRouteMap"), { ssr: false });
 
 export default function DriverPage() {
   const { user, loading, logout } = useAuth();

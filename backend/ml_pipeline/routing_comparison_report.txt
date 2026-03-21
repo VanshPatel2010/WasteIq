@@ -1,0 +1,16 @@
+================ COMPARISON RESULTS ================
+Metric: Overflow Penalty Score (Lower is better)
+This measures how long highly filled bins sit waiting for a truck.
+----------------------------------------------------
+Algorithm 1 (A* / Pure Distance Baseline): 232,647 points
+Algorithm 2 (Our ML Prediction Optimization): 202,113 points
+
+=> ML Model performed 13.1% BETTER than standard A* routing!
+
+--- Route Strategy Differences ---
+ML Track 1: Udhna, Katargam, Amroli, Adajan, Athwa
+A* Track 1: Udhna, Althan, Vesu, Sachin, Kadodara
+ML Track 2: Pandesara, Sachin, Vesu, Piplod, Althan
+A* Track 2: Pandesara, Piplod, Katargam, Varacha, Kamrej
+ML Track 3: Varacha, Kadodara, Sarthana, Kamrej
+A* Track 3: Athwa, Adajan, Amroli, Sarthana
