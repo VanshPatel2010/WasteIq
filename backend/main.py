@@ -1,4 +1,5 @@
 """WasteIQ Backend — FastAPI Application."""
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
@@ -15,9 +16,15 @@ def startup_event():
     from app.services.realtime_scheduler import start_scheduler
     start_scheduler()
 
+raw_cors_origins = os.getenv("CORS_ORIGINS", "")
+configured_origins = [origin.strip() for origin in raw_cors_origins.split(",") if origin.strip()]
+default_origins = ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"]
+allow_origins = configured_origins or default_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "*"],
+    allow_origins=allow_origins,
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
