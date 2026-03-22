@@ -8,10 +8,16 @@ export default function ReceiverPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const [matches, setMatches] = useState<any[]>([]);
+  const [activeListings, setActiveListings] = useState<any[]>([]);
   const [toast, setToast] = useState("");
 
   useEffect(() => { if (!loading && user?.role !== "receiver") router.push("/"); }, [user, loading, router]);
-  useEffect(() => { if (user) api.getMatches().then(setMatches).catch(console.error); }, [user]);
+  useEffect(() => { 
+    if (user) {
+      api.getMatches().then(setMatches).catch(console.error); 
+      api.getListings("active").then(setActiveListings).catch(console.error);
+    }
+  }, [user]);
 
   const handleAction = async (id: number, action: string) => {
     await api.updateMatch(id, action);
@@ -48,6 +54,21 @@ export default function ReceiverPage() {
               </div>
             )}
             {m.status === "accepted" && <button onClick={() => handleAction(m.id, "complete")} className="btn-primary w-full mt-4 py-3 text-sm font-bold shadow-md">Confirm Collection</button>}
+          </div>
+        ))}
+
+        <h2 className="text-xs font-bold text-[#6B7280] uppercase tracking-widest mt-8 pt-4 border-t border-[#D6D3C8]">Available Surplus</h2>
+        {activeListings.length === 0 && <p className="text-[#9CA3AF] text-sm text-center py-8 font-medium bg-white rounded-xl border border-dashed border-[#D6D3C8]">No active surplus available right now.</p>}
+        {activeListings.map(l => (
+          <div key={l.id} className="card card-hover shadow-sm border border-[#D6D3C8] bg-white">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-bold text-[#1F2937] capitalize text-lg text-emerald-800">{l.material_type}</span>
+              <span className="badge shadow-sm badge-worker border-[#1B7A4A]/20">{l.status}</span>
+            </div>
+            <div className="bg-[#F5F5F0] p-3 rounded-lg border border-[#D6D3C8]/50 mb-2">
+              <p className="text-sm font-medium text-[#6B7280]"><span className="font-bold text-[#1F2937]">{l.quantity_kg}kg</span> — {l.description || "No description provided."}</p>
+            </div>
+            <p className="text-[10px] text-[#9CA3AF] mt-1 font-bold uppercase tracking-wider">Posted: {new Date(l.created_at).toLocaleDateString("en-IN")}</p>
           </div>
         ))}
       </div>
