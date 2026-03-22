@@ -114,31 +114,31 @@ export default function DashboardPage() {
         </div>
         
         {/* TIME MACHINE UI */}
-        <div className={`p-4 rounded-xl border-2 ${simStatus?.is_simulated ? "border-[#534AB7] bg-[#534AB7]/10" : "border-[#2A2A36] bg-[#22222E]"} flex items-center gap-4`}>
+        <div className={`p-4 rounded-xl border-2 ${simStatus?.is_simulated ? "border-[#534AB7] bg-[#534AB7]/10" : "border-[#D6D3C8] bg-white"} flex items-center gap-4 shadow-sm`}>
           <div>
-            <p className="text-xs text-[#8A8887] font-semibold tracking-wider uppercase mb-1">
+            <p className="text-xs text-[#6B7280] font-bold tracking-widest uppercase mb-1">
               ⏳ {simStatus?.is_simulated ? "Time Machine (Active)" : "Live Mode"}
             </p>
             <input 
               type="datetime-local" 
-              className="bg-[#1C1C24] text-sm border border-[#2A2A36] rounded px-2 py-1"
+              className="bg-[#F9FAFB] text-sm border border-[#D6D3C8] rounded px-3 py-1.5 text-[#1F2937] outline-none focus:border-[#1B7A4A] shadow-inner"
               value={simDate}
               onChange={(e) => setSimDate(e.target.value)}
             />
           </div>
           
           <div className="flex gap-2">
-            <button className="btn-primary py-1 px-3 text-sm" onClick={() => setSimulation(simDate)}>Simulate</button>
+            <button className="btn-primary py-1.5 px-4 text-sm font-bold shadow-sm" onClick={() => setSimulation(simDate)}>Simulate</button>
             {simStatus?.is_simulated && (
-              <button className="bg-[#2A2A36] hover:bg-[#343442] text-white py-1 px-3 rounded text-sm transition" onClick={() => setSimulation(null)}>Reset to Live</button>
+              <button className="bg-white border border-[#D6D3C8] hover:bg-[#F9FAFB] text-[#B91C1C] font-bold py-1.5 px-4 rounded-xl text-sm transition shadow-sm" onClick={() => setSimulation(null)}>Reset to Live</button>
             )}
           </div>
           
           {/* Quick Presets */}
-          <div className="flex gap-2 border-l border-[#2A2A36] pl-4 ml-2">
-            <button className="badge badge-worker cursor-pointer" onClick={() => { setSimDate("2023-10-18T21:00"); setSimulation("2023-10-18T21:00"); }}>🥁 Navratri Night</button>
-            <button className="badge bg-[#A32D2D]/20 text-[#E04848] cursor-pointer" onClick={() => { setSimDate("2023-11-12T08:00"); setSimulation("2023-11-12T08:00"); }}>🪔 Diwali Morning</button>
-            <button className="badge badge-driver cursor-pointer" onClick={() => { setSimDate("2024-01-14T14:00"); setSimulation("2024-01-14T14:00"); }}>🪁 Uttarayan</button>
+          <div className="flex gap-2 border-l border-[#D6D3C8] pl-5 ml-2">
+            <button className="badge badge-worker border border-[#D6D3C8] cursor-pointer hover:bg-white transition-all shadow-sm" onClick={() => { setSimDate("2023-10-18T21:00"); setSimulation("2023-10-18T21:00"); }}>🥁 Navratri Night</button>
+            <button className="badge border border-red-200 bg-red-50 text-[#B91C1C] cursor-pointer hover:bg-red-100 transition-all shadow-sm" onClick={() => { setSimDate("2023-11-12T08:00"); setSimulation("2023-11-12T08:00"); }}>🪔 Diwali Morning</button>
+            <button className="badge badge-driver border border-[#D6D3C8] cursor-pointer hover:bg-white transition-all shadow-sm" onClick={() => { setSimDate("2024-01-14T14:00"); setSimulation("2024-01-14T14:00"); }}>🪁 Uttarayan</button>
           </div>
         </div>
       </div>
@@ -159,7 +159,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-5 gap-6">
         <div className="col-span-3 card" style={{ minHeight: 480 }}>
-          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">🗺️ Zone Map <span className="text-xs text-[#8A8887]">({zones.length} zones)</span></h3>
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">🗺️ Zone Map <span className="text-xs font-bold text-[#6B7280]/60">({zones.length} zones)</span></h3>
           <ZoneMap zones={zones} trucks={trucks} routes={routes} />
         </div>
 
@@ -191,14 +191,14 @@ export default function DashboardPage() {
               {simStatus?.is_simulated && <span className="text-xs badge badge-ml">ML Optimized</span>}
             </h3>
             {trucks.map((t: any) => (
-              <div key={t.id} className="py-2 border-b border-[#D6D3C8] last:border-0 hover:bg-[#F0EDE6]/30 px-2 -mx-2 rounded-lg transition-colors">
-                <div className="flex justify-between text-sm">
-                  <span>{t.vehicle_number}</span>
-                  <span className={`badge ${!t.is_active ? "bg-gray-800 text-gray-500" : t.status === "on_route" ? "badge-worker" : t.status === "idle" ? "badge-ml" : t.status === "completed" ? "fill-green" : "badge-driver"}`}>
-                    {!t.is_active ? "Inactive (Standby)" : t.status}
+              <div key={t.id} className="py-2 border-b border-[#D6D3C8] last:border-0 hover:bg-[#F0EDE6]/50 px-2 -mx-2 rounded-lg transition-colors">
+                <div className="flex justify-between text-sm items-center">
+                  <span className="font-semibold text-[#1F2937]">{t.vehicle_number}</span>
+                  <span className={`badge shadow-sm ${!t.is_active ? "bg-gray-100 text-gray-500 border border-gray-200" : t.status === "on_route" ? "badge-worker" : t.status === "idle" ? "badge-ml" : t.status === "completed" ? "fill-green lg" : "badge-driver"}`}>
+                    {!t.is_active ? "Standby" : t.status}
                   </span>
                 </div>
-                {t.driver_name && t.is_active && <p className="text-xs text-[#8A8887] mt-1">{t.driver_name}</p>}
+                {t.driver_name && t.is_active && <p className="text-xs text-[#6B7280] font-medium mt-0.5">{t.driver_name}</p>}
               </div>
             ))}
           </div>

@@ -30,13 +30,13 @@ const TRUCK_COLORS = [
 const truckIcon = new L.DivIcon({ html: '<div style="font-size:24px;text-align:center">🚛</div>', className: "", iconSize: [30, 30], iconAnchor: [15, 15] });
 
 export default function ZoneMap({ zones = [], trucks = [], routes = [] }: { zones: Zone[]; trucks: Truck[]; routes?: Route[] }) {
-  if (zones.length === 0) return <div className="h-[400px] flex items-center justify-center text-[#5F5E5A]">Loading map...</div>;
+  if (zones.length === 0) return <div className="h-[400px] flex items-center justify-center text-[#6B7280] font-bold tracking-widest bg-[#F9FAFB] rounded-3xl border border-[#D6D3C8] border-dashed">INITIALIZING INTELLIGENCE GRID...</div>;
 
   const center: [number, number] = [zones[0]?.lat || 21.17, zones[0]?.lng || 72.83];
 
   return (
     <MapContainer center={center} zoom={12} style={{ height: 400, width: "100%", borderRadius: 12 }} scrollWheelZoom={true}>
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' />
+      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' />
       
       {/* Route Lines */}
       {routes?.filter(r => r.status !== 'completed').map((route, i) => {
