@@ -27,7 +27,7 @@ WasteIQ is a fully modernized web application using industry-standard tools:
 - **Frontend**: Next.js 14 (App Router), React, TypeScript, Tailwind CSS
 - **Frontend integrations**: Leaflet (Mapping with CartoDB Voyager tiles), Recharts (Analytics), next-pwa (Progressive Web App support)
 - **Backend & API**: Python 3.10+, FastAPI, Pydantic, SQLAlchemy
-- **Machine Learning**: Scikit-Learn (RandomForestRegressor for surge prediction), Joblib
+- **Machine Learning**: Scikit-Learn (XGBoost-Regressor for surge prediction), Joblib
 - **Database**: SQLite (Local Dev) / PostgreSQL (Production)
 - **Background Tasks**: Celery & Redis
 - **Architecture**: RESTful APIs, JWT Authentication
