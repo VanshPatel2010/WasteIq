@@ -10,6 +10,8 @@ export default function ReceiverPage() {
   const [matches, setMatches] = useState<any[]>([]);
   const [activeListings, setActiveListings] = useState<any[]>([]);
   const [toast, setToast] = useState("");
+  const materialTypes = ["food", "organic", "plastic", "metal", "paper", "glass", "other"];
+  const [acceptedTypes, setAcceptedTypes] = useState<string[]>(materialTypes);
 
   useEffect(() => { if (!loading && user?.role !== "receiver") router.push("/"); }, [user, loading, router]);
   useEffect(() => { 
@@ -18,6 +20,11 @@ export default function ReceiverPage() {
       api.getListings("active").then(setActiveListings).catch(console.error);
     }
   }, [user]);
+
+  const toggleType = (type: string) => {
+    if (acceptedTypes.includes(type)) setAcceptedTypes(acceptedTypes.filter(t => t !== type));
+    else setAcceptedTypes([...acceptedTypes, type]);
+  };
 
   const handleAction = async (id: number, action: string) => {
     await api.updateMatch(id, action);
@@ -34,10 +41,31 @@ export default function ReceiverPage() {
         <div><h1 className="text-lg font-bold text-[#1F2937]">Surplus Receiver</h1><p className="text-sm font-medium text-[#6B7280]">{user.name}</p></div>
         <button onClick={logout} className="text-xs font-bold text-[#6B7280] hover:text-[#B91C1C] transition-colors">Logout</button>
       </div>
+      <div className="p-4">
+        <div className="card shadow-sm border border-[#D6D3C8] bg-white p-4">
+          <h2 className="text-xs font-bold text-[#6B7280] uppercase tracking-widest mb-3">Accept/Decline Waste Types</h2>
+          <div className="flex flex-wrap gap-2">
+            {materialTypes.map(type => (
+              <button
+                key={type}
+                onClick={() => toggleType(type)}
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all border-2 ${
+                  acceptedTypes.includes(type)
+                    ? "bg-[#1B7A4A] text-white border-[#1B7A4A] shadow-md"
+                    : "bg-white text-[#6B7280] border-[#D6D3C8] hover:border-[#1B7A4A] line-through opacity-70"
+                }`}
+              >
+                {type.charAt(0).toUpperCase() + type.slice(1)} {acceptedTypes.includes(type) ? "(Accepting)" : "(Declined)"}
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-[#9CA3AF] mt-3 font-medium">Filter the matches and active listings you want to see.</p>
+        </div>
+      </div>
       <div className="p-4 space-y-4">
         <h2 className="text-xs font-bold text-[#6B7280] uppercase tracking-widest mt-2">Match Alerts</h2>
-        {matches.length === 0 && <p className="text-[#9CA3AF] text-sm text-center py-8 font-medium bg-white rounded-xl border border-dashed border-[#D6D3C8]">No matches yet.</p>}
-        {matches.map(m => (
+        {matches.filter(m => m.listing && acceptedTypes.includes(m.listing.material_type)).length === 0 && <p className="text-[#9CA3AF] text-sm text-center py-8 font-medium bg-white rounded-xl border border-dashed border-[#D6D3C8]">No matches yet.</p>}
+        {matches.filter(m => m.listing && acceptedTypes.includes(m.listing.material_type)).map(m => (
           <div key={m.id} className="card card-hover shadow-sm border border-[#D6D3C8] bg-white">
             <div className="flex justify-between items-center mb-3">
               <span className="font-bold text-lg text-[#1F2937] capitalize">{m.listing?.material_type}</span>
@@ -58,8 +86,8 @@ export default function ReceiverPage() {
         ))}
 
         <h2 className="text-xs font-bold text-[#6B7280] uppercase tracking-widest mt-8 pt-4 border-t border-[#D6D3C8]">Available Surplus</h2>
-        {activeListings.length === 0 && <p className="text-[#9CA3AF] text-sm text-center py-8 font-medium bg-white rounded-xl border border-dashed border-[#D6D3C8]">No active surplus available right now.</p>}
-        {activeListings.map(l => (
+        {activeListings.filter(l => acceptedTypes.includes(l.material_type)).length === 0 && <p className="text-[#9CA3AF] text-sm text-center py-8 font-medium bg-white rounded-xl border border-dashed border-[#D6D3C8]">No active surplus available right now.</p>}
+        {activeListings.filter(l => acceptedTypes.includes(l.material_type)).map(l => (
           <div key={l.id} className="card card-hover shadow-sm border border-[#D6D3C8] bg-white">
             <div className="flex justify-between items-center mb-2">
               <span className="font-bold text-[#1F2937] capitalize text-lg text-emerald-800">{l.material_type}</span>
