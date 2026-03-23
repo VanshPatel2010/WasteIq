@@ -27,10 +27,14 @@ def run_predictions_for_all_zones(db: Session):
     two_hours_ago = now - timedelta(hours=2)
     
     for zone in zones:
-        # Check if worker report exists in last 2 hours
+        # Check if worker report exists in last 2 hours.
+        # Upper bound (reported_at <= now) is critical for simulation: without it,
+        # real 2026 reports would pass `>= two_hours_ago` even when simulating 2023,
+        # causing every zone to be skipped and predictions to never run.
         recent_report = db.query(WasteWorkerReport).filter(
             WasteWorkerReport.zone_id == zone.id,
-            WasteWorkerReport.reported_at >= two_hours_ago
+            WasteWorkerReport.reported_at >= two_hours_ago,
+            WasteWorkerReport.reported_at <= now,
         ).first()
         
         if recent_report:
@@ -63,9 +67,13 @@ def run_predictions_for_all_zones(db: Session):
         )
         db.add(prediction)
         
-        # Update zone if no higher-priority data
-        if zone.fill_level_source == FillLevelSource.predicted:
+        # Always update zone fill level during simulation so the map reflects
+        # the ML prediction for the simulated date (not stale real-world data).
+        # In live mode this only updates zones already in 'predicted' source.
+        from app.services.simulation_state import _simulated_time
+        if _simulated_time is not None or zone.fill_level_source == FillLevelSource.predicted:
             zone.current_fill_level = round(predicted_fill, 1)
+            zone.fill_level_source = FillLevelSource.predicted
             zone.fill_level_updated_at = now
             
             fill_log = ZoneFillLevelLog(
@@ -120,8 +128,10 @@ def _generate_prediction(zone: Zone, now: datetime) -> float:
     }])
     
     pred_kg = float(model.predict(df)[0])
-    # Assume max capacity of a single zone is roughly 120kg for this demo
-    fill_percent = (pred_kg / 120.0) * 100
+    # Use per-zone capacity: bin_count × 25 kg/bin at 100% fill
+    # This matches KG_PER_BIN_FULL in route_optimizer.py so urgency scoring is consistent
+    zone_capacity_kg = max(zone.bin_count * 25.0, 50.0)
+    fill_percent = (pred_kg / zone_capacity_kg) * 100
     return max(0, min(100, fill_percent))
 
 

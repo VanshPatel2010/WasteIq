@@ -12,12 +12,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const demoAccounts = [
-    { email: "admin@wasteiq.com", role: "Municipal Admin", icon: "🏛️" },
-    { email: "driver1@surat.gov.in", role: "Truck Driver", icon: "🚛" },
-    { email: "worker1@wasteiq.com", role: "Waste Worker", icon: "👷" },
-    { email: "kabadi@wasteiq.com", role: "Kabadiwalla", icon: "♻️" },
-    { email: "generator@wasteiq.com", role: "Surplus Generator", icon: "🏨" },
-    { email: "receiver@wasteiq.com", role: "Surplus Receiver", icon: "🤝" },
+    { email: "admin@wasteiq.com", role: "Municipal Admin", icon: "🏛️", password: "password123" },
+    { email: "driver2@test.com", role: "Truck Driver", icon: "🚛", password: "driver2@test.com" },
+    { email: "worker1@wasteiq.com", role: "Waste Worker", icon: "👷", password: "password123" },
+    { email: "kabadi@wasteiq.com", role: "Kabadiwalla", icon: "♻️", password: "password123" },
+    { email: "generator@wasteiq.com", role: "Surplus Generator", icon: "🏨", password: "password123" },
+    { email: "receiver@wasteiq.com", role: "Surplus Receiver", icon: "🤝", password: "password123" },
   ];
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -34,13 +34,13 @@ export default function LoginPage() {
     }
   };
 
-  const quickLogin = async (demoEmail: string) => {
+  const quickLogin = async (demoEmail: string, demoPassword: string = "password123") => {
     setEmail(demoEmail);
-    setPassword("password123");
+    setPassword(demoPassword);
     setError("");
     setLoading(true);
     try {
-      await login(demoEmail, "password123");
+      await login(demoEmail, demoPassword);
       router.push("/");
     } catch (err: any) {
       setError(err.message || "Login failed");
@@ -86,7 +86,7 @@ export default function LoginPage() {
           <p className="text-[#6B7280] text-xs text-center mb-3">Quick Demo Login</p>
           <div className="grid grid-cols-2 gap-2">
             {demoAccounts.map((acc) => (
-              <button key={acc.email} onClick={() => quickLogin(acc.email)} className="card card-hover p-3 text-left hover:border-[#1B7A4A]/40 cursor-pointer transition-all">
+              <button key={acc.email} onClick={() => quickLogin(acc.email, acc.password)} className="card card-hover p-3 text-left hover:border-[#1B7A4A]/40 cursor-pointer transition-all">
                 <span className="text-lg">{acc.icon}</span>
                 <p className="text-xs font-medium mt-1">{acc.role}</p>
                 <p className="text-[10px] text-[#6B7280] truncate">{acc.email}</p>

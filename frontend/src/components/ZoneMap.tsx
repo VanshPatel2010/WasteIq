@@ -45,7 +45,14 @@ export default function ZoneMap({ zones = [], trucks = [], routes = [] }: { zone
         
         // Connect truck's current location to the first zone if possible, then connect the zones
         const startPoint = truck?.current_lat && truck?.current_lng ? [[truck.current_lat, truck.current_lng] as [number, number]] : [];
-        const zonePoints = (route.zone_sequence || []).map((s: any) => [s.lat, s.lng] as [number, number]);
+        // Look up actual lat/lng from zones array since route stops only store zone_id
+        const zonePoints = (route.zone_sequence || [])
+          .map((s: any) => {
+            const zone = zones.find(z => z.id === s.zone_id);
+            return zone ? [zone.lat, zone.lng] as [number, number] : null;
+          })
+          .filter((p): p is [number, number] => p !== null && p[0] !== undefined && p[1] !== undefined);
+        
         const allPoints = [...startPoint, ...zonePoints];
 
         if (allPoints.length < 2) return null;

@@ -158,9 +158,49 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-5 gap-6">
-        <div className="col-span-3 card" style={{ minHeight: 480 }}>
-          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">🗺️ Zone Map <span className="text-xs font-bold text-[#6B7280]/60">({zones.length} zones)</span></h3>
-          <ZoneMap zones={zones} trucks={trucks} routes={routes} />
+        <div className="col-span-3 flex flex-col gap-6">
+          <div className="card" style={{ minHeight: 480 }}>
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">🗺️ Zone Map <span className="text-xs font-bold text-[#6B7280]/60">({zones.length} zones)</span></h3>
+            <ZoneMap zones={zones} trucks={trucks} routes={routes} />
+          </div>
+
+          {showAddModal && (
+            <div className="card shadow-md animate-fade-in border-[#D6D3C8]">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-[#1F2937]">Register Personnel</h3>
+                  <p className="text-sm text-[#6B7280]">Create new roles for the municipal fleet network.</p>
+                </div>
+                <button onClick={() => setShowAddModal(false)} className="text-[#9CA3AF] hover:text-[#1F2937] transition-colors">
+                  ✕
+                </button>
+              </div>
+              
+              <form onSubmit={handleAddPersonnel} className="space-y-4">
+                <div className="flex gap-2 p-1 bg-[#F0EDE6] rounded-xl shadow-inner border border-[#D6D3C8]/50 w-full max-w-sm">
+                  <button type="button" onClick={() => setAddForm({...addForm, role: "driver"})} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${addForm.role === "driver" ? "bg-white text-[#1B7A4A] shadow-sm transform scale-100" : "text-[#6B7280] hover:text-[#1F2937]"}`}>🚛 Driver</button>
+                  <button type="button" onClick={() => setAddForm({...addForm, role: "waste_worker"})} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${addForm.role === "waste_worker" ? "bg-white text-[#1B7A4A] shadow-sm transform scale-100" : "text-[#6B7280] hover:text-[#1F2937]"}`}>👷 Waste Worker</button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <input type="text" value={addForm.name} onChange={e => setAddForm({...addForm, name: e.target.value})} className="input w-full bg-[#F5F5F0] border-[#D6D3C8] text-[#1F2937]" placeholder="Full Name" required />
+                  <input type="email" value={addForm.email} onChange={e => setAddForm({...addForm, email: e.target.value})} className="input w-full bg-[#F5F5F0] border-[#D6D3C8] text-[#1F2937]" placeholder="Email Address" required />
+                  <input type="tel" value={addForm.phone} onChange={e => setAddForm({...addForm, phone: e.target.value})} className="input w-full bg-[#F5F5F0] border-[#D6D3C8] text-[#1F2937]" placeholder="Phone Number (Optional)" />
+                  <input type="password" value={addForm.password} onChange={e => setAddForm({...addForm, password: e.target.value})} className="input w-full bg-[#F5F5F0] border-[#D6D3C8] text-[#1F2937]" placeholder="Temporary Password" required />
+                </div>
+                
+                {addError && <p className="text-xs text-[#B91C1C] font-bold bg-[#FEF2F2] p-2 rounded-lg text-center w-full max-w-sm">{addError}</p>}
+                {addSuccess && <p className="text-xs text-[#15803D] font-bold bg-[#F0FDF4] p-2 rounded-lg text-center w-full max-w-sm">{addSuccess}</p>}
+                
+                <div className="flex gap-3 pt-2">
+                  <button type="submit" disabled={addLoading} className="btn-primary py-2 px-6 text-sm font-bold shadow-md">
+                    {addLoading ? "Creating..." : `Add ${addForm.role === "driver" ? "Driver" : "Worker"}`}
+                  </button>
+                  <button type="button" onClick={() => setShowAddModal(false)} className="bg-white border text-sm font-bold border-[#D6D3C8] hover:bg-[#F0EDE6] py-2 px-6 rounded-xl shadow-sm transition-colors text-[#1F2937]">Cancel</button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
 
         <div className="col-span-2 space-y-4">
@@ -204,35 +244,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border border-[#D6D3C8]">
-            <h2 className="text-xl font-bold text-[#1F2937] mb-2">Register Personnel</h2>
-            <p className="text-sm text-[#6B7280] mb-6">Create new roles for the municipal fleet network.</p>
-            <form onSubmit={handleAddPersonnel} className="space-y-4">
-              <div className="flex gap-2 p-1 bg-[#F0EDE6] rounded-xl shadow-inner border border-[#D6D3C8]/50">
-                <button type="button" onClick={() => setAddForm({...addForm, role: "driver"})} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${addForm.role === "driver" ? "bg-white text-[#1B7A4A] shadow-sm transform scale-100" : "text-[#6B7280] hover:text-[#1F2937]"}`}>🚛 Driver</button>
-                <button type="button" onClick={() => setAddForm({...addForm, role: "waste_worker"})} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${addForm.role === "waste_worker" ? "bg-white text-[#1B7A4A] shadow-sm transform scale-100" : "text-[#6B7280] hover:text-[#1F2937]"}`}>👷 Waste Worker</button>
-              </div>
-              <input type="text" value={addForm.name} onChange={e => setAddForm({...addForm, name: e.target.value})} className="input w-full bg-[#F5F5F0] border-[#D6D3C8] text-[#1F2937]" placeholder="Full Name" required />
-              <input type="email" value={addForm.email} onChange={e => setAddForm({...addForm, email: e.target.value})} className="input w-full bg-[#F5F5F0] border-[#D6D3C8] text-[#1F2937]" placeholder="Email Address" required />
-              <input type="tel" value={addForm.phone} onChange={e => setAddForm({...addForm, phone: e.target.value})} className="input w-full bg-[#F5F5F0] border-[#D6D3C8] text-[#1F2937]" placeholder="Phone Number (Optional)" />
-              <input type="password" value={addForm.password} onChange={e => setAddForm({...addForm, password: e.target.value})} className="input w-full bg-[#F5F5F0] border-[#D6D3C8] text-[#1F2937]" placeholder="Temporary Password" required />
-              
-              {addError && <p className="text-xs text-[#B91C1C] font-bold bg-[#FEF2F2] p-2 rounded-lg text-center">{addError}</p>}
-              {addSuccess && <p className="text-xs text-[#15803D] font-bold bg-[#F0FDF4] p-2 rounded-lg text-center">{addSuccess}</p>}
-              
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowAddModal(false)} className="bg-white border text-sm font-bold border-[#D6D3C8] hover:bg-[#F0EDE6] flex-1 py-2.5 rounded-xl shadow-sm transition-colors text-[#1F2937]">Cancel</button>
-                <button type="submit" disabled={addLoading} className="btn-primary flex-1 py-2.5 text-sm font-bold shadow-md">
-                  {addLoading ? "Creating..." : `Add ${addForm.role === "driver" ? "Driver" : "Worker"}`}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

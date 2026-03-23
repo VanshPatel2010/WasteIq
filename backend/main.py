@@ -70,17 +70,18 @@ def set_simulation_date(req: SimulationDateRequest):
         set_simulated_time(dt)
         
         from app.services.surge_predictor import run_predictions_for_all_zones
-        from app.services.route_optimizer import re_optimize_active_routes
+        from app.services.route_optimizer import optimize_all_routes
         
         preds = run_predictions_for_all_zones(db)
         fleet_res = calculate_and_allocate_fleet(db, target_date=dt)
-        re_optimize_active_routes(db)
+        route_res = optimize_all_routes(db)  # Creates/updates routes for the simulated date
         
         return {
             "status": "simulated",
             "current_time": dt.isoformat(),
             "predictions_updated": preds,
-            "fleet_allocation": fleet_res
+            "fleet_allocation": fleet_res,
+            "routes": route_res,
         }
     finally:
         db.close()

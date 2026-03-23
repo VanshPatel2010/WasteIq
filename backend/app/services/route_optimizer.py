@@ -50,7 +50,8 @@ def _get_effective_fill(db: Session, zone: Zone) -> tuple[float, float]:
     worker_report = (
         db.query(WasteWorkerReport)
         .filter(WasteWorkerReport.zone_id == zone.id,
-                WasteWorkerReport.reported_at >= two_hours_ago)
+                WasteWorkerReport.reported_at >= two_hours_ago,
+                WasteWorkerReport.reported_at <= now)
         .order_by(WasteWorkerReport.reported_at.desc())
         .first()
     )
@@ -77,7 +78,10 @@ def _time_decay_factor(zone: Zone) -> float:
     if not zone.last_collected_at:
         return 2.0  # Never collected — maximum urgency boost
 
-    hours_since = (datetime.utcnow() - zone.last_collected_at).total_seconds() / 3600.0
+    # Use simulated time so Time Machine mode produces correct urgency values
+    now = get_current_time()
+    hours_since = (now - zone.last_collected_at).total_seconds() / 3600.0
+    hours_since = max(0.0, hours_since)  # guard against future last_collected_at
     # After 12 hours the factor is ~2.0, after 24h ~3.5
     return 1.0 + (hours_since / 12.0) ** TIME_DECAY_EXPONENT
 
@@ -156,9 +160,113 @@ def _greedy_route(scored_zones: list[dict], truck_lat: float, truck_lng: float, 
     return ordered
 
 
+def _get_truck_position(db: Session, truck) -> tuple:
+    """Resolve a truck's effective starting position."""
+    lat = truck.current_lat
+    lng = truck.current_lng
+    if lat and lng:
+        return lat, lng
+
+    last_route = (
+        db.query(Route)
+        .filter(Route.truck_id == truck.id)
+        .order_by(Route.date.desc())
+        .first()
+    )
+    if last_route and last_route.zone_sequence:
+        first_stop = last_route.zone_sequence[0]
+        ref_zone = db.query(Zone).filter(Zone.id == first_stop["zone_id"]).first()
+        if ref_zone:
+            return ref_zone.lat, ref_zone.lng
+
+    # Spread across major Surat districts by truck id
+    fallback_positions = [
+        (21.1702, 72.8311),  # Adajan
+        (21.2095, 72.8311),  # Udhna
+        (21.1539, 72.8242),  # Rander
+        (21.1936, 72.8591),  # Katargam
+        (21.1702, 72.9042),  # Varachha
+    ]
+    return fallback_positions[truck.id % len(fallback_positions)]
+
+
+def _cluster_zones_by_geography(zones: list, n_clusters: int) -> dict:
+    """Partition zones into n_clusters geographic sectors using k-means on lat/lng.
+
+    Returns {cluster_id: [Zone, ...]}. Falls back gracefully when sklearn
+    is unavailable or n_clusters <= 1.
+    """
+    if n_clusters <= 1 or len(zones) <= n_clusters:
+        return {0: zones}
+
+    try:
+        import numpy as np
+        from sklearn.cluster import KMeans
+
+        coords = np.array([[z.lat, z.lng] for z in zones])
+        km = KMeans(n_clusters=n_clusters, n_init=10, random_state=42)
+        labels = km.fit_predict(coords)
+
+        clusters: dict = {i: [] for i in range(n_clusters)}
+        for zone, label in zip(zones, labels):
+            clusters[int(label)].append(zone)
+        return clusters
+
+    except ImportError:
+        # Round-robin fallback without sklearn
+        clusters = {i: [] for i in range(n_clusters)}
+        for i, zone in enumerate(zones):
+            clusters[i % n_clusters].append(zone)
+        return clusters
+
+
+def _assign_clusters_to_trucks(clusters: dict, trucks: list, db: Session) -> dict:
+    """Match each geographic cluster to its nearest truck (centroid distance).
+
+    Returns {truck_id: [Zone, ...]}.
+    """
+    truck_positions = {t.id: _get_truck_position(db, t) for t in trucks}
+
+    # Compute centroid of each cluster
+    centroids = {}
+    for cid, czones in clusters.items():
+        if czones:
+            centroids[cid] = (
+                sum(z.lat for z in czones) / len(czones),
+                sum(z.lng for z in czones) / len(czones),
+            )
+
+    # Greedy nearest-centroid matching — assign the closest truck to each cluster
+    available_trucks = list(trucks)
+    assignment: dict = {t.id: [] for t in trucks}
+
+    for cid, centroid in centroids.items():
+        if not available_trucks:
+            break
+        clat, clng = centroid
+        best_truck = min(
+            available_trucks,
+            key=lambda t: _haversine_km(clat, clng, *truck_positions[t.id]),
+        )
+        assignment[best_truck.id] = clusters[cid]
+        available_trucks.remove(best_truck)
+
+    return assignment
+
+
 def optimize_all_routes(db: Session):
-    """Optimize routes for all available trucks today using dynamic urgency."""
-    today = datetime.utcnow().strftime("%Y-%m-%d")
+    """Optimize routes using geographic clustering + per-sector urgency greedy.
+
+    Phase 1 — K-means clusters all zones into N geographic sectors (N = active trucks)
+               so each truck owns a distinct part of the city.
+    Phase 2 — Each truck is matched to its nearest cluster centroid.
+    Phase 3 — Within each sector the capacity-aware greedy algorithm ranks stops by
+               dynamic urgency (fill × 1/distance × time-decay).
+    Result  — Non-overlapping routes that still respect ML predictions and capacity.
+    """
+    now = get_current_time()
+    today = now.strftime("%Y-%m-%d")
+
     trucks = db.query(Truck).filter(
         Truck.status != TruckStatus.completed,
         Truck.is_active == True
@@ -166,28 +274,33 @@ def optimize_all_routes(db: Session):
     zones = db.query(Zone).all()
 
     if not trucks or not zones:
-        return {"routes_created": 0, "zones_assigned": 0, "algorithm": "dynamic_urgency"}
+        return {"routes_created": 0, "zones_assigned": 0, "algorithm": "kmeans_geographic"}
 
+    # ── Phase 1: Cluster zones into geographic sectors ──────────────────────────
+    n_clusters = min(len(trucks), len(zones))
+    clusters = _cluster_zones_by_geography(zones, n_clusters)
+
+    # ── Phase 2: Assign each cluster to the nearest truck ───────────────────────
+    truck_zone_map = _assign_clusters_to_trucks(clusters, trucks, db)
+
+    # ── Phase 3: Greedy urgency routing within each sector ───────────────────────
     routes_created = 0
-    assigned_zone_ids: set[int] = set()
+    total_zones_assigned = 0
 
     for truck in trucks:
-        truck_lat = truck.current_lat or 21.17
-        truck_lng = truck.current_lng or 72.83
+        sector_zones = truck_zone_map.get(truck.id, [])
+        if not sector_zones:
+            continue
 
-        # Score all unassigned zones relative to this truck
-        available_zones = [z for z in zones if z.id not in assigned_zone_ids]
-        scored = [_compute_dynamic_urgency(db, z, truck_lat, truck_lng) for z in available_zones]
+        truck_lat, truck_lng = _get_truck_position(db, truck)
 
-        # Build capacity-aware greedy route
+        scored = [_compute_dynamic_urgency(db, z, truck_lat, truck_lng) for z in sector_zones]
         route_zones = _greedy_route(scored, truck_lat, truck_lng, truck.capacity_kg)
 
         if not route_zones:
             continue
 
-        # Mark zones as assigned
-        for rz in route_zones:
-            assigned_zone_ids.add(rz["zone_id"])
+        total_zones_assigned += len(route_zones)
 
         # Calculate real total distance along the route path
         total_km = 0.0
@@ -213,17 +326,14 @@ def optimize_all_routes(db: Session):
             for idx, rz in enumerate(route_zones)
         ]
 
-        # Average speed ~20 km/h in city + 10 min per stop for collection
         estimated_mins = round((total_km / 20.0) * 60 + len(route_zones) * 10, 0)
 
         existing = db.query(Route).filter(Route.truck_id == truck.id, Route.date == today).first()
         if existing:
-            # Preserve completed stops from existing route
             completed_stops = [s for s in (existing.zone_sequence or []) if s.get("completed")]
             completed_zone_ids = {s["zone_id"] for s in completed_stops}
             new_stops = [s for s in zone_sequence if s["zone_id"] not in completed_zone_ids]
 
-            # Re-number
             for idx, s in enumerate(new_stops):
                 s["order"] = len(completed_stops) + idx + 1
 
@@ -253,8 +363,9 @@ def optimize_all_routes(db: Session):
     db.commit()
     return {
         "routes_created": routes_created,
-        "zones_assigned": len(assigned_zone_ids),
-        "algorithm": "dynamic_urgency_haversine",
+        "zones_assigned": total_zones_assigned,
+        "algorithm": "kmeans_geographic_clustering + dynamic_urgency_haversine",
+        "clusters": n_clusters,
     }
 
 
@@ -263,7 +374,7 @@ def re_optimize_active_routes(db: Session):
 
     Called automatically by the realtime scheduler.
     """
-    today = datetime.utcnow().strftime("%Y-%m-%d")
+    today = get_current_time().strftime("%Y-%m-%d")
     routes = db.query(Route).filter(
         Route.date == today,
         Route.status.in_([RouteStatus.pending, RouteStatus.active]),

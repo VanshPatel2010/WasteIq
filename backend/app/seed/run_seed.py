@@ -41,23 +41,38 @@ def run_seed():
 
         # --- Users (6 roles) ---
         admin = User(email="admin@wasteiq.com", password_hash=get_password_hash("password123"), role=UserRole.admin, name="Rajesh Kumar", phone="9876543210", organisation_id=municipality.id)
-        driver = User(email="driver@wasteiq.com", password_hash=get_password_hash("password123"), role=UserRole.driver, name="Suresh Patel", phone="9876543211", organisation_id=municipality.id)
+        driver1 = User(email="driver@wasteiq.com", password_hash=get_password_hash("password123"), role=UserRole.driver, name="Suresh Patel", phone="9876543211", organisation_id=municipality.id)
+        driver2 = User(email="driver2@wasteiq.com", password_hash=get_password_hash("password123"), role=UserRole.driver, name="Ramesh Chauhan", phone="9876543218", organisation_id=municipality.id)
+        driver3 = User(email="driver3@wasteiq.com", password_hash=get_password_hash("password123"), role=UserRole.driver, name="Dinesh Vora", phone="9876543219", organisation_id=municipality.id)
         worker1 = User(email="worker1@wasteiq.com", password_hash=get_password_hash("password123"), role=UserRole.waste_worker, name="Priya Patel", phone="9876543212", organisation_id=municipality.id)
         worker2 = User(email="worker2@wasteiq.com", password_hash=get_password_hash("password123"), role=UserRole.waste_worker, name="Manoj Shah", phone="9876543213", organisation_id=municipality.id)
         kabadi = User(email="kabadi@wasteiq.com", password_hash=get_password_hash("password123"), role=UserRole.kabadiwalla, name="Ramesh Kabadi", phone="9876543214")
         generator = User(email="generator@wasteiq.com", password_hash=get_password_hash("password123"), role=UserRole.generator, name="Hotel Manager", phone="9876543215", organisation_id=hotel.id)
         receiver = User(email="receiver@wasteiq.com", password_hash=get_password_hash("password123"), role=UserRole.receiver, name="NGO Coordinator", phone="9876543216", organisation_id=ngo.id)
-        db.add_all([admin, driver, worker1, worker2, kabadi, generator, receiver])
+        db.add_all([admin, driver1, driver2, driver3, worker1, worker2, kabadi, generator, receiver])
         db.flush()
 
-        # --- Zones (6 zones in Surat) ---
+        # --- Zones (15 zones across Surat) ---
         zones_data = [
-            ("Adajan", 21.2010, 72.7910, ZoneType.residential, 4.2, 12),
-            ("Vesu", 21.1580, 72.7700, ZoneType.residential, 3.8, 10),
-            ("Ring Road", 21.1900, 72.8200, ZoneType.commercial, 5.1, 15),
-            ("Udhna", 21.1650, 72.8490, ZoneType.industrial, 6.3, 18),
-            ("Katargam", 21.2150, 72.8450, ZoneType.market, 3.5, 14),
-            ("Varachha", 21.2090, 72.8770, ZoneType.residential, 4.7, 11),
+            # Zone name,           lat,     lng,    type,                    area,  bins
+            # Route 1 - West Surat (Truck 1)
+            ("Adajan",           21.2010, 72.7910, ZoneType.residential,     4.2,   12),
+            ("Vesu",             21.1580, 72.7700, ZoneType.residential,     3.8,   10),
+            ("Piplod",           21.1720, 72.7820, ZoneType.residential,     3.2,    9),
+            ("Pal",              21.1850, 72.7730, ZoneType.residential,     2.9,    8),
+            ("Althan",           21.1660, 72.7980, ZoneType.residential,     3.5,   10),
+            # Route 2 - Central Surat (Truck 2)
+            ("Ring Road",        21.1900, 72.8200, ZoneType.commercial,      5.1,   15),
+            ("Athwa Lines",      21.1880, 72.8010, ZoneType.commercial,      4.8,   14),
+            ("Nanpura",          21.1940, 72.8300, ZoneType.commercial,      3.6,   12),
+            ("Ghod Dod Road",    21.2050, 72.8160, ZoneType.commercial,      4.1,   13),
+            ("Majura Gate",      21.2000, 72.8360, ZoneType.market,          3.3,   11),
+            # Route 3 - East Surat (Truck 3)
+            ("Udhna",            21.1650, 72.8490, ZoneType.industrial,      6.3,   18),
+            ("Katargam",         21.2150, 72.8450, ZoneType.market,          3.5,   14),
+            ("Varachha",         21.2090, 72.8770, ZoneType.residential,     4.7,   11),
+            ("Limbayat",         21.1790, 72.8680, ZoneType.industrial,      5.2,   16),
+            ("Sachin",           21.0890, 72.8700, ZoneType.industrial,      7.1,   20),
         ]
         zones = []
         for name, lat, lng, ztype, area, bins in zones_data:
@@ -66,21 +81,21 @@ def run_seed():
             db.add(z)
         db.flush()
 
-        # Assign workers to zones
-        # Worker 1: Adajan, Vesu, Ring Road
-        for z in zones[:3]:
+        # Assign workers to zones (split evenly)
+        for z in zones[:8]:
             z.assigned_waste_worker_id = worker1.id
-        # Worker 2: Udhna, Katargam, Varachha
-        for z in zones[3:]:
+        for z in zones[8:]:
             z.assigned_waste_worker_id = worker2.id
 
-        # Udhna: drift zone with correction factor
-        zones[3].correction_factor = 0.15
-        zones[3].ml_trust_score = 0.60
+        # Udhna (index 10): drift zone with correction factor
+        zones[10].correction_factor = 0.15
+        zones[10].ml_trust_score = 0.60
 
-        # --- Truck ---
-        truck = Truck(vehicle_number="GJ-05-AB-1234", capacity_kg=5000, current_lat=21.17, current_lng=72.83, driver_id=driver.id, status=TruckStatus.idle, municipality_id=municipality.id)
-        db.add(truck)
+        # --- 3 Trucks ---
+        truck1 = Truck(vehicle_number="GJ-05-AB-1234", capacity_kg=5000, current_lat=21.20, current_lng=72.79, driver_id=driver1.id, status=TruckStatus.on_route, municipality_id=municipality.id)
+        truck2 = Truck(vehicle_number="GJ-05-CD-5678", capacity_kg=4500, current_lat=21.19, current_lng=72.82, driver_id=driver2.id, status=TruckStatus.on_route, municipality_id=municipality.id)
+        truck3 = Truck(vehicle_number="GJ-05-EF-9012", capacity_kg=6000, current_lat=21.16, current_lng=72.85, driver_id=driver3.id, status=TruckStatus.on_route, municipality_id=municipality.id)
+        db.add_all([truck1, truck2, truck3])
         db.flush()
 
         # --- 30 days of seed data ---
@@ -169,15 +184,31 @@ def run_seed():
         )
         db.add(drift_alert)
 
-        # --- Today's route ---
+        # --- 3 Today's Routes (one per truck) ---
         today_str = now.strftime("%Y-%m-%d")
-        route = Route(
-            truck_id=truck.id, date=today_str,
-            status=RouteStatus.pending,
-            zone_sequence=[{"zone_id": z.id, "zone_name": z.name, "order": i+1, "completed": False, "fill_level": z.current_fill_level} for i, z in enumerate(zones)],
-            total_distance_km=21.5, estimated_duration_mins=150
+        route1_zones = zones[:5]   # West Surat — Truck 1
+        route2_zones = zones[5:10] # Central Surat — Truck 2
+        route3_zones = zones[10:]  # East Surat — Truck 3
+
+        route1 = Route(
+            truck_id=truck1.id, date=today_str,
+            status=RouteStatus.active,
+            zone_sequence=[{"zone_id": z.id, "zone_name": z.name, "order": i+1, "completed": i < 2, "fill_level": z.current_fill_level, "distance_km": round(random.uniform(1.2, 4.5), 1)} for i, z in enumerate(route1_zones)],
+            total_distance_km=18.3, estimated_duration_mins=130
         )
-        db.add(route)
+        route2 = Route(
+            truck_id=truck2.id, date=today_str,
+            status=RouteStatus.active,
+            zone_sequence=[{"zone_id": z.id, "zone_name": z.name, "order": i+1, "completed": i < 1, "fill_level": z.current_fill_level, "distance_km": round(random.uniform(1.0, 3.8), 1)} for i, z in enumerate(route2_zones)],
+            total_distance_km=14.7, estimated_duration_mins=115
+        )
+        route3 = Route(
+            truck_id=truck3.id, date=today_str,
+            status=RouteStatus.pending,
+            zone_sequence=[{"zone_id": z.id, "zone_name": z.name, "order": i+1, "completed": False, "fill_level": z.current_fill_level, "distance_km": round(random.uniform(2.0, 6.5), 1)} for i, z in enumerate(route3_zones)],
+            total_distance_km=26.2, estimated_duration_mins=180
+        )
+        db.add_all([route1, route2, route3])
 
         # --- Surplus listing ---
         listing = SurplusListing(
@@ -210,8 +241,9 @@ def run_seed():
         db.commit()
         print("Seed data created successfully!")
         print(f"  Organisations: 5")
-        print(f"  Users: 7 (admin, driver, 2 workers, kabadi, generator, receiver)")
-        print(f"  Zones: 6")
+        print(f"  Users: 9 (admin, 3 drivers, 2 workers, kabadi, generator, receiver)")
+        print(f"  Zones: 15 across Surat")
+        print(f"  Trucks: 3 (each with today's active route)")
         print(f"  30-day history: reports, predictions, accuracy logs")
         print(f"  Active drift alert: Udhna zone")
         print(f"  Correction factor: Udhna = 0.15")
